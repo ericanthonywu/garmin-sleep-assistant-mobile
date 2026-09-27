@@ -20,36 +20,12 @@ class TonightTargetCard extends StatelessWidget {
     this.date,
   });
 
-
   @override
   Widget build(BuildContext context) {
     if (recommendation == null) return const SizedBox.shrink();
 
     final theme = Theme.of(context);
     final rec = recommendation!;
-
-    Color statusColor;
-    String statusLabel;
-
-    switch (rec.adherenceStatus) {
-      case 'advancing':
-        statusColor = AppColors.success;
-        statusLabel = 'STEPPING EARLIER';
-        break;
-      case 'achieved':
-        statusColor = AppColors.primary;
-        statusLabel = 'TARGET HIT';
-        break;
-      case 'regressing':
-        statusColor = AppColors.warning;
-        statusLabel = 'ADAPTING';
-        break;
-      case 'holding':
-      default:
-        statusColor = AppColors.primaryMuted;
-        statusLabel = 'STABILIZING';
-        break;
-    }
 
     final recommendedBedtimeDisplay = TimeFormatter.formatTime(rec.recommendedBedtime);
     final latestCutoffDisplay = rec.latestBedtimeCutoff != null
@@ -60,366 +36,354 @@ class TonightTargetCard extends StatelessWidget {
         : TimeFormatter.formatTime('07:30');
     final windDownDisplay = rec.windDownStart != null
         ? TimeFormatter.formatTime(rec.windDownStart)
-        : null;
+        : TimeFormatter.formatTime('23:30');
+
+    // Parse date for clean header badge
+    final parsedDate = date != null ? DateTime.tryParse(date!) : null;
+    final dateDisplay = parsedDate != null
+        ? DateFormat('EEE, MMM d').format(parsedDate)
+        : DateFormat('EEE, MMM d').format(DateTime.now());
 
     return GlassCard(
-      color: AppColors.surfaceElevated,
-      borderColor: AppColors.primaryMuted.withValues(alpha: 0.35),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header: Title & Adherence Badge
+          // 1. Clean Top Header: Title + Today's Date Badge
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(Icons.hotel_rounded, size: 18, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text(
-                'CIRCADIAN SLEEP RECOMMENDATION',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.0,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-                ),
-                child: Text(
-                  statusLabel,
-                  style: TextStyle(
-                    color: statusColor,
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
+              Row(
+                children: [
+                  const Icon(Icons.nightlight_round, size: 16, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Text(
+                    'TONIGHT\'S SLEEP TARGET',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: AppColors.primary,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
-          // Date Tag & Freshness Indicator
-          Row(
-            children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryMuted.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: AppColors.primaryMuted.withValues(alpha: 0.35)),
+                  color: AppColors.surfaceElevated,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.calendar_today_rounded, size: 11, color: AppColors.primary),
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: AppColors.success,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
                     const SizedBox(width: 5),
                     Text(
-                      date != null && DateTime.tryParse(date!) != null
-                          ? DateFormat('EEEE, MMM d').format(DateTime.parse(date!))
-                          : DateFormat('EEEE, MMM d').format(DateTime.now()),
+                      dateDisplay,
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
-                        color: AppColors.primary,
-                        letterSpacing: 0.2,
+                        color: AppColors.textPrimary,
                       ),
                     ),
                   ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                width: 6,
-                height: 6,
-                decoration: const BoxDecoration(
-                  color: AppColors.success,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 5),
-              const Text(
-                'Tonight\'s Schedule Active',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 18),
 
-
-          // Primary Bedtime & Target Wake Row
+          // 2. Hero Timing Trio (Target Bedtime • Hard Cutoff • Wake Time)
           Row(
             children: [
-              Expanded(
-                flex: 5,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'RECOMMENDED BEDTIME',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        fontSize: 10,
-                        color: AppColors.textTertiary,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      recommendedBedtimeDisplay,
-                      style: theme.textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 28,
-                        color: AppColors.textPrimary,
-                        height: 1.1,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      rec.shiftMinutes > 0
-                          ? '${rec.shiftMinutes}m earlier shift from anchor'
-                          : 'Aligned with circadian baseline',
-                      style: theme.textTheme.bodyMedium?.copyWith(
-                        fontSize: 11,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
+              // Column 1: Target Bedtime
               Expanded(
                 flex: 4,
-                child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: AppColors.surface,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.border),
+                child: _buildTimeMetric(
+                  label: 'TARGET BEDTIME',
+                  timeStr: recommendedBedtimeDisplay,
+                  subtitle: rec.shiftMinutes > 0
+                      ? '${rec.shiftMinutes}m earlier step'
+                      : 'Optimal window',
+                  timeColor: AppColors.textPrimary,
+                  subtitleColor: AppColors.primary,
+                ),
+              ),
+
+              // Vertical Divider
+              Container(
+                width: 1,
+                height: 48,
+                color: AppColors.border.withValues(alpha: 0.6),
+              ),
+
+              // Column 2: Hard Cutoff
+              Expanded(
+                flex: 4,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 14),
+                  child: _buildTimeMetric(
+                    label: 'LATEST CUTOFF',
+                    timeStr: latestCutoffDisplay,
+                    subtitle: 'Circadian ceiling ⚠️',
+                    timeColor: AppColors.warning,
+                    subtitleColor: AppColors.warning,
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.alarm_rounded, size: 14, color: AppColors.momWarm),
-                          const SizedBox(width: 4),
-                          Text(
-                            'TARGET WAKE',
-                            style: theme.textTheme.labelSmall?.copyWith(fontSize: 9),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        targetWakeDisplay,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 16,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      if (windDownDisplay != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          'Wind-down: $windDownDisplay',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: AppColors.textTertiary,
-                          ),
-                        ),
-                      ],
-                    ],
+                ),
+              ),
+
+              // Vertical Divider
+              Container(
+                width: 1,
+                height: 48,
+                color: AppColors.border.withValues(alpha: 0.6),
+              ),
+
+              // Column 3: Target Wake
+              Expanded(
+                flex: 3,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 14),
+                  child: _buildTimeMetric(
+                    label: 'WAKE UP',
+                    timeStr: targetWakeDisplay,
+                    subtitle: '7.5h target',
+                    timeColor: AppColors.textPrimary,
+                    subtitleColor: AppColors.textTertiary,
                   ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 18),
+
+          // 3. Visual Circadian Timeline Ribbon
+          _buildCircadianTimelineRibbon(
+            windDown: windDownDisplay,
+            target: recommendedBedtimeDisplay,
+            cutoff: latestCutoffDisplay,
           ),
           const SizedBox(height: 16),
 
-          // HIGHLIGHTED BOX: LATEST PERMISSIBLE BEDTIME CUTOFF (CIRCADIAN CEILING)
-          Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  AppColors.warning.withValues(alpha: 0.12),
-                  AppColors.surfaceElevated,
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: AppColors.warning.withValues(alpha: 0.4),
-                width: 1.2,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(5),
-                      decoration: BoxDecoration(
-                        color: AppColors.warning.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.timer_off_rounded,
-                        size: 16,
-                        color: AppColors.warning,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'LATEST TIME TO SLEEP (CIRCADIAN CEILING)',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.warning,
-                              letterSpacing: 0.8,
+          // 4. Action Strip: Tappable Science Modal Cue + Curtain Preview
+          Row(
+            children: [
+              // Tap for detailed science explanation
+              Expanded(
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(8),
+                  onTap: () => _showDetailedExplanationSheet(context, rec, weeklyHistory),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.auto_awesome_rounded, size: 14, color: AppColors.primary),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            'Based on ${rec.anchorBedtime} anchor • Why this target? →',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.primary,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          const Text(
-                            'Sleep science cutoff threshold',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // Curtain preview button
+              Consumer(
+                builder: (context, ref, _) {
+                  return InkWell(
+                    borderRadius: BorderRadius.circular(8),
+                    onTap: () => ref.read(sleepEnforcementProvider.notifier).previewOverlay(),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.shield_moon_outlined, size: 12, color: AppColors.textTertiary),
+                          SizedBox(width: 4),
+                          Text(
+                            'Preview Curtain',
                             style: TextStyle(
                               fontSize: 10,
-                              color: AppColors.textTertiary,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    Text(
-                      latestCutoffDisplay,
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        fontSize: 22,
-                        color: AppColors.warning,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Sleeping past $latestCutoffDisplay triggers a circadian phase delay, elevates core nocturnal temperature, and drastically suppresses deep Slow-Wave Sleep (NREM 3). Lights out before this cutoff!',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Consumer(
-                      builder: (context, ref, _) {
-                        return InkWell(
-                          onTap: () => ref.read(sleepEnforcementProvider.notifier).previewOverlay(),
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: AppColors.warning.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(Icons.shield_moon_rounded, size: 14, color: AppColors.warning),
-                                SizedBox(width: 6),
-                                Text(
-                                  'Preview Sleep Lock Screen',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w700,
-                                    color: AppColors.warning,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-
-          // BRIEF EXPLANATION BOX (CLICKABLE TO OPEN DETAILED EXPLANATION)
-          InkWell(
-            onTap: () => _showDetailedExplanationSheet(context, rec, weeklyHistory),
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.primaryMuted.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.primaryMuted.withValues(alpha: 0.3)),
+                  );
+                },
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.psychology_rounded, size: 16, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Text(
-                        'WHY THIS RECOMMENDATION?',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      const Spacer(),
-                      const Icon(Icons.arrow_forward_ios_rounded, size: 11, color: AppColors.primary),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    'Calculated from your 7-day anchor (${rec.anchorBedtime}) with a 10m gradual advance to ${rec.recommendedBedtime}. Cutoff set to $latestCutoffDisplay because your data shows sleeping past it crashed your sleep score to 68/100.',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 11,
-                      color: AppColors.textSecondary,
-                      height: 1.35,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Tap to view complete circadian science breakdown →',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            ],
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTimeMetric({
+    required String label,
+    required String timeStr,
+    required String subtitle,
+    required Color timeColor,
+    required Color subtitleColor,
+  }) {
+    // Split time and period (e.g. "12:00" and "AM")
+    final parts = timeStr.split(' ');
+    final mainDigits = parts.isNotEmpty ? parts[0] : timeStr;
+    final period = parts.length > 1 ? parts[1] : '';
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textTertiary,
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 3),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
+          children: [
+            Text(
+              mainDigits,
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: timeColor,
+                letterSpacing: -0.5,
+                height: 1.0,
+              ),
+            ),
+            if (period.isNotEmpty) ...[
+              const SizedBox(width: 3),
+              Text(
+                period,
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: timeColor.withValues(alpha: 0.75),
+                ),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 3),
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            color: subtitleColor,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCircadianTimelineRibbon({
+    required String windDown,
+    required String target,
+    required String cutoff,
+  }) {
+    return Column(
+      children: [
+        // Visual multi-segment progress bar
+        Container(
+          height: 8,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceElevated,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            children: [
+              // Wind-down segment
+              Expanded(
+                flex: 3,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryMuted,
+                    borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              // Optimal window segment (between target and cutoff)
+              Expanded(
+                flex: 4,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [AppColors.primary, AppColors.sleepLight],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
+              // Cutoff buffer segment
+              Expanded(
+                flex: 2,
+                child: Container(
+                  decoration: const BoxDecoration(
+                    color: AppColors.warning,
+                    borderRadius: BorderRadius.horizontal(right: Radius.circular(4)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 6),
+
+        // Timeline milestones
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Wind-down $windDown',
+              style: const TextStyle(fontSize: 10, color: AppColors.textTertiary),
+            ),
+            Text(
+              'Target $target',
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.primary),
+            ),
+            Text(
+              'Cutoff $cutoff',
+              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: AppColors.warning),
+            ),
+          ],
+        ),
+      ],
     );
   }
 
@@ -500,63 +464,94 @@ class TonightTargetCard extends StatelessWidget {
                 child: ListView(
                   padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                   children: [
-                    // Card 1: Target vs Cutoff Distinction
-                    _buildModalCard(
+                    // Section 1: Target vs Cutoff Distinction
+                    _buildSectionHeader('1. TARGET BEDTIME VS. HARD CUTOFF'),
+                    _buildExplanationCard(
                       icon: Icons.flag_rounded,
                       iconColor: AppColors.primary,
-                      title: '1. Target Bedtime vs. Hard Cutoff',
+                      title: 'Target: ${rec.recommendedBedtime} (Your Goal)',
                       content:
-                          'You were NOT asked to sleep at $cutoffDisplay! Your actual target bedtime tonight is ${rec.recommendedBedtime} (with wind-down starting at ${rec.windDownStart ?? "11:15 PM"}).\n\n'
-                          '$cutoffDisplay is your Circadian Ceiling (Deadline). Going to bed between ${rec.recommendedBedtime} and $cutoffDisplay is safe, but staying awake past $cutoffDisplay triggers severe physiological disruption.',
+                          'Your target bedtime (${rec.recommendedBedtime}) is the optimal moment to begin sleep. It is calculated by advancing your 7-day habitual anchor (${rec.anchorBedtime}) by 10 minutes earlier. This gradual shifting respects your suprachiasmatic nucleus (SCN) circadian pacemaker without causing insomnia.',
                     ),
-                    const SizedBox(height: 14),
-
-                    // Card 2: Your Mathematical Anchor
-                    _buildModalCard(
-                      icon: Icons.anchor_rounded,
-                      iconColor: AppColors.sleepLight,
-                      title: '2. Your 7-Day Circadian Anchor (${rec.anchorBedtime})',
-                      content:
-                          'Your master biological clock (suprachiasmatic nucleus) is habituated to fall asleep at ${rec.anchorBedtime}, calculated from your recorded 7-day bedtime history.\n\n'
-                          'Because your recent nights showed disciplined sleep, the algorithm advanced your bedtime by ${rec.shiftMinutes} minutes earlier to hit your 12:00 AM goal safely without causing insomnia in the Wake Maintenance Zone.',
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Card 3: Deep Sleep & Temperature Physiology
-                    _buildModalCard(
-                      icon: Icons.bedtime_rounded,
-                      iconColor: AppColors.sleepDeep,
-                      title: '3. Why Exceeding $cutoffDisplay Erases Deep Sleep',
-                      content:
-                          'Human sleep is non-uniform. Slow-Wave Deep Sleep (NREM 3/4) occurs almost exclusively in the first 3-4 hours of the night in sync with your steepest drop in core body temperature.\n\n'
-                          'If you sleep past $cutoffDisplay, that temperature-dip window is compressed. Even if you sleep in the morning, the tail end of sleep is almost entirely light or REM sleep—it CANNOT replace the deep physical repair you lost.',
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Card 4: Historical Evidence from Your Data
-                    _buildModalCard(
-                      icon: Icons.insights_rounded,
+                    const SizedBox(height: 10),
+                    _buildExplanationCard(
+                      icon: Icons.shield_rounded,
                       iconColor: AppColors.warning,
-                      title: '4. Evidence from Your Actual Garmin Data',
+                      title: 'Hard Cutoff: $cutoffDisplay (Circadian Ceiling)',
                       content:
-                          '• Sept 23 (Late Bedtime at 01:00 AM — past cutoff):\n'
-                          '   Sleep plunged to 6.0 hours, Sleep Score crashed to 68/100, and Resting HR remained elevated at 62 bpm.\n\n'
-                          '• Sept 27 (Disciplined Bedtime at 23:30 — well before cutoff):\n'
-                          '   Slept 7.7 hours, Sleep Score surged to 88/100, Resting HR dropped to an optimal 54 bpm, and Deep Sleep hit 135 minutes!\n\n'
-                          'Your own body taxes you 20 score points every time you cross 12:45 AM.',
+                          'Your cutoff ($cutoffDisplay) is the non-negotiable deadline. Staying awake past this cutoff causes sleep onset delay during your body\'s natural core temperature nadir, severely compressing deep slow-wave sleep (NREM 3) and spiking next-day cortisol.',
                     ),
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 20),
 
-                    // Card 5: Actionable Protocol
-                    _buildModalCard(
-                      icon: Icons.check_circle_rounded,
-                      iconColor: AppColors.success,
-                      title: '5. Tonight\'s Recommended Protocol',
+                    // Section 2: Why You Can Sleep at 12:45 AM
+                    _buildSectionHeader('2. WHY IS 12:45 AM PERMISSIBLE?'),
+                    _buildExplanationCard(
+                      icon: Icons.calculate_rounded,
+                      iconColor: AppColors.sleepLight,
+                      title: 'Your 7-Day Anchor Math',
                       content:
-                          '1. ${rec.windDownStart ?? "11:15 PM"}: Dim overhead lights, put phone down, and begin wind-down.\n'
-                          '2. ${rec.recommendedBedtime}: Get into bed.\n'
-                          '3. $cutoffDisplay: Hard cutoff — lights out to lock in another 85+ recovery score.\n'
-                          '4. ${rec.targetWakeTime ?? "08:00 AM"}: Morning wake-up (8.0 hours target).',
+                          'Your habitual sleep onset over the past 7 days centers at 00:10 (12:10 AM). Clinical chronobiology (AASM & Sleep Foundation guidelines) dictates that sleep window boundaries allow a ±45-minute circadian buffer around the anchor. Therefore, 12:45 AM is the absolute latest point before your biological rhythm enters the delayed sleep phase.',
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Section 3: Historical Garmin Data Proof
+                    _buildSectionHeader('3. EVIDENCE FROM YOUR GARMIN DATA'),
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Historical Proof from Your Recent Nights:',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                          ),
+                          const SizedBox(height: 12),
+                          _buildHistoricalRow(
+                            date: 'Sept 23 (Past Cutoff):',
+                            bedtime: '1:00 AM',
+                            score: '68/100',
+                            result: 'Severe Deep Sleep Deficit ❌',
+                            isBad: true,
+                          ),
+                          const Divider(height: 16),
+                          _buildHistoricalRow(
+                            date: 'Sept 27 (Before Cutoff):',
+                            bedtime: '11:30 PM',
+                            score: '88/100',
+                            result: 'Peak Recovery & High HRV ✅',
+                            isBad: false,
+                          ),
+                          const SizedBox(height: 10),
+                          const Text(
+                            'Notice that whenever you went to bed past 12:45 AM, your sleep score never exceeded 70. Staying before the cutoff reliably yields scores of 80+.',
+                            style: TextStyle(fontSize: 11, color: AppColors.textSecondary),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Section 4: Tonight's Protocol
+                    _buildSectionHeader('4. RECOMMENDED WIND-DOWN PROTOCOL'),
+                    _buildProtocolStep(
+                      time: TimeFormatter.formatTime(rec.windDownStart ?? '23:30'),
+                      action: 'Begin Wind-Down',
+                      description: 'Stop eating, dim bedroom lighting, and switch off high-intensity blue light.',
+                    ),
+                    _buildProtocolStep(
+                      time: rec.recommendedBedtime,
+                      action: 'In Bed Lights Dimmed',
+                      description: 'Get into bed. Ideal window to fall asleep without tossing and turning.',
+                    ),
+                    _buildProtocolStep(
+                      time: cutoffDisplay,
+                      action: 'Hard Cutoff (Lights Out)',
+                      description: 'Screen locked. Phone placed on nightstand or across room.',
                     ),
                     const SizedBox(height: 24),
                   ],
@@ -569,7 +564,22 @@ class TonightTargetCard extends StatelessWidget {
     );
   }
 
-  Widget _buildModalCard({
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8, left: 4),
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w800,
+          color: AppColors.textTertiary,
+          letterSpacing: 1.0,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExplanationCard({
     required IconData icon,
     required Color iconColor,
     required String title,
@@ -582,25 +592,117 @@ class TonightTargetCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(color: AppColors.border),
       ),
-      child: Column(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(icon, size: 16, color: iconColor),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
+          Icon(icon, size: 20, color: iconColor),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: AppColors.textPrimary),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                    color: AppColors.textPrimary,
+                  ),
                 ),
-              ),
+                const SizedBox(height: 6),
+                Text(
+                  content,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHistoricalRow({
+    required String date,
+    required String bedtime,
+    required String score,
+    required String result,
+    required bool isBad,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 4,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(date, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11)),
+              Text('Bedtime: $bedtime', style: const TextStyle(fontSize: 11, color: AppColors.textTertiary)),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(
-            content,
-            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary, height: 1.45),
+        ),
+        Expanded(
+          flex: 2,
+          child: Text(
+            score,
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              fontSize: 14,
+              color: isBad ? AppColors.danger : AppColors.success,
+            ),
+          ),
+        ),
+        Expanded(
+          flex: 5,
+          child: Text(
+            result,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: isBad ? AppColors.danger : AppColors.success,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProtocolStep({
+    required String time,
+    required String action,
+    required String description,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceElevated,
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Text(
+              time,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11, color: AppColors.primary),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(action, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                const SizedBox(height: 2),
+                Text(description, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+              ],
+            ),
           ),
         ],
       ),
