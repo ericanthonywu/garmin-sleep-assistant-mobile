@@ -60,7 +60,7 @@ void main() {
     expect(find.byType(MomCareApp), findsOneWidget);
     expect(find.text('85'), findsOneWidget); // Sleep score
     expect(find.text('Morning Briefing'), findsOneWidget);
-    expect(find.text('HISTORICAL SLEEP & WAKE SCHEDULE'), findsOneWidget);
+    expect(find.text('7-DAY SLEEP SCHEDULE'), findsOneWidget);
   });
 
   testWidgets('WeeklySleepChart renders bed and wake schedule and toggles views', (WidgetTester tester) async {
@@ -101,7 +101,7 @@ void main() {
     await tester.pump();
 
     // Verify Title & View Toggle
-    expect(find.text('HISTORICAL SLEEP & WAKE SCHEDULE'), findsOneWidget);
+    expect(find.text('7-DAY SLEEP SCHEDULE'), findsOneWidget);
     expect(find.text('Schedule'), findsOneWidget);
     expect(find.text('Duration'), findsWidgets);
 

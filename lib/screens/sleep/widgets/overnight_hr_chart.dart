@@ -47,26 +47,34 @@ class OvernightHrChart extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                'NOCTURNAL HEART RATE CURVE',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.0,
+              const Icon(Icons.favorite_rounded, size: 14, color: AppColors.danger),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'NOCTURNAL HR CURVE',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   _statBadge('Min', '$minBpm', AppColors.success),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 5),
                   _statBadge('Avg', '$avgBpm', AppColors.primary),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 5),
                   _statBadge('Max', '$maxBpm', AppColors.danger),
                 ],
               ),
             ],
           ),
+
           const SizedBox(height: 18),
           SizedBox(
             height: 120,
@@ -133,15 +141,16 @@ class OvernightHrChart extends StatelessWidget {
 
   Widget _statBadge(String label, String value, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        '$label: $value',
-        style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w700),
+        '$label $value',
+        style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w700),
       ),
     );
   }
 }
+

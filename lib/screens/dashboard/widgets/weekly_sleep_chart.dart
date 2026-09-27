@@ -46,25 +46,26 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
         children: [
           // Header: Title and View Toggle
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.history_toggle_off_rounded, size: 16, color: AppColors.primary),
-                  const SizedBox(width: 8),
-                  Text(
-                    'HISTORICAL SLEEP & WAKE SCHEDULE',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: AppColors.primary,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 0.8,
-                    ),
+              const Icon(Icons.history_toggle_off_rounded, size: 16, color: AppColors.primary),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  '7-DAY SLEEP SCHEDULE',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.8,
                   ),
-                ],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 8),
               _buildViewToggle(),
             ],
           ),
+
           const SizedBox(height: 6),
           Text(
             _currentView == SleepChartView.schedule
@@ -173,11 +174,12 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.transparent,
           borderRadius: BorderRadius.circular(6),
         ),
+
         child: Text(
           title,
           style: TextStyle(
@@ -575,14 +577,22 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
           ),
           const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDetailMetric('Went to Bed', bedtimeStr, Icons.bedtime_rounded, isLate ? AppColors.danger : AppColors.primary),
-              _buildDetailMetric('Woke Up', wakeStr, Icons.wb_sunny_rounded, AppColors.momWarm),
-              _buildDetailMetric('Duration', durationStr, Icons.timer_rounded, AppColors.sleepLight),
-              _buildDetailMetric('Score', item.sleepScore != null ? '${item.sleepScore}' : '--', Icons.star_rounded, AppColors.primary),
+              Expanded(
+                child: _buildDetailMetric('Went to Bed', bedtimeStr, Icons.bedtime_rounded, isLate ? AppColors.danger : AppColors.primary),
+              ),
+              Expanded(
+                child: _buildDetailMetric('Woke Up', wakeStr, Icons.wb_sunny_rounded, AppColors.momWarm),
+              ),
+              Expanded(
+                child: _buildDetailMetric('Duration', durationStr, Icons.timer_rounded, AppColors.sleepLight),
+              ),
+              Expanded(
+                child: _buildDetailMetric('Score', item.sleepScore != null ? '${item.sleepScore}' : '--', Icons.star_rounded, AppColors.primary),
+              ),
             ],
           ),
+
         ],
       ),
     );
