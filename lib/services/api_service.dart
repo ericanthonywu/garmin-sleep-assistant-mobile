@@ -45,12 +45,22 @@ class ApiService {
     required String date,
     required List<Map<String, dynamic>> sleepStages,
     required List<Map<String, dynamic>> heartRateSamples,
+    String? bedtime,
+    String? wakeTime,
+    double? sleepHours,
+    int? sleepScore,
   }) async {
-    final res = await _dio.post('/health/sync', data: {
+    final payload = <String, dynamic>{
       'date': date,
       'sleepStages': sleepStages,
       'heartRateSamples': heartRateSamples,
-    });
+    };
+    if (bedtime != null) payload['bedtime'] = bedtime;
+    if (wakeTime != null) payload['wakeTime'] = wakeTime;
+    if (sleepHours != null) payload['sleepHours'] = sleepHours;
+    if (sleepScore != null) payload['sleepScore'] = sleepScore;
+
+    final res = await _dio.post('/health/sync', data: payload);
     return res.data as Map<String, dynamic>;
   }
 

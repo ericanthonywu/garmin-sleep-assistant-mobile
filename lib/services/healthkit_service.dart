@@ -38,13 +38,13 @@ class HealthKitService {
   }
 
   /// Fetch sleep intervals for target date.
-  /// Window: 6:00 PM yesterday to 2:00 PM today.
+  /// Window: 4:00 PM yesterday to 9:00 PM today to fully cover daytime and late night owls.
   Future<List<Map<String, dynamic>>> fetchSleepStages(DateTime date) async {
     if (!Platform.isIOS) return [];
 
     try {
-      final start = DateTime(date.year, date.month, date.day - 1, 18, 0);
-      final end = DateTime(date.year, date.month, date.day, 14, 0);
+      final start = DateTime(date.year, date.month, date.day - 1, 16, 0);
+      final end = DateTime(date.year, date.month, date.day, 21, 0);
 
       final points = await _health.getHealthDataFromTypes(
         types: [
@@ -82,12 +82,13 @@ class HealthKitService {
   }
 
   /// Fetch overnight heart rate samples.
+  /// Window: 6:00 PM yesterday to 9:00 PM today to cover late morning & afternoon sleepers.
   Future<List<Map<String, dynamic>>> fetchOvernightHR(DateTime date) async {
     if (!Platform.isIOS) return [];
 
     try {
-      final start = DateTime(date.year, date.month, date.day - 1, 22, 0);
-      final end = DateTime(date.year, date.month, date.day, 11, 0);
+      final start = DateTime(date.year, date.month, date.day - 1, 18, 0);
+      final end = DateTime(date.year, date.month, date.day, 21, 0);
 
       final points = await _health.getHealthDataFromTypes(
         types: [HealthDataType.HEART_RATE],
