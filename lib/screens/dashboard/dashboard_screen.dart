@@ -126,7 +126,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // 1. Priority 1: Daily Sleep & Wake Schedule Timeline Chart
+        // 1. TOP HERO: Circadian Sleep Recommendations (Recommended Bedtime & Latest Cutoff)
+        TonightTargetCard(
+          recommendation: data.sleepEngineRecommendation,
+          weeklyHistory: data.weeklyChart,
+        ),
+        const SizedBox(height: 18),
+
+        // 2. Daily Sleep & Wake Schedule Timeline Chart
         DailySleepScheduleChart(
           bedtime: data.bedtime,
           wakeTime: data.wakeTime,
@@ -137,12 +144,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           awakeMins: data.awakeMins,
           sleepStages: data.sleepStages,
           onTapDetails: () => context.go('/sleep'),
-        ),
-        const SizedBox(height: 18),
-
-        // Tonight's Circadian Sleep Target & Latest Cutoff Card
-        TonightTargetCard(
-          recommendation: data.sleepEngineRecommendation,
         ),
         const SizedBox(height: 18),
 
