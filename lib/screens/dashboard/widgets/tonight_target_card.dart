@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../models/sleep_recommendation.dart';
+import '../../../../providers/sleep_enforcement_provider.dart';
 import '../../../../theme/colors.dart';
 import '../../../../utils/time_formatter.dart';
 import '../../../../widgets/glass_card.dart';
@@ -262,6 +264,38 @@ class TonightTargetCard extends StatelessWidget {
                     color: AppColors.textSecondary,
                     height: 1.4,
                   ),
+                ),
+                const SizedBox(height: 10),
+                Consumer(
+                  builder: (context, ref, _) {
+                    return InkWell(
+                      onTap: () => ref.read(sleepEnforcementProvider.notifier).previewOverlay(),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppColors.warning.withValues(alpha: 0.3)),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.shield_moon_rounded, size: 14, color: AppColors.warning),
+                            SizedBox(width: 6),
+                            Text(
+                              'Preview Sleep Lock Screen',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.warning,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/constants.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/health_sync_provider.dart';
+import '../../providers/sleep_enforcement_provider.dart';
 import '../../theme/colors.dart';
 import '../../widgets/glass_card.dart';
 
@@ -209,6 +210,60 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ],
               ],
             ),
+          ),
+          const SizedBox(height: 24),
+
+          Text('CIRCADIAN SLEEP ENFORCEMENT & REMINDERS', style: theme.textTheme.labelSmall),
+          const SizedBox(height: 8),
+          Consumer(
+            builder: (context, ref, _) {
+              final enfState = ref.watch(sleepEnforcementProvider);
+              final enfNotifier = ref.read(sleepEnforcementProvider.notifier);
+
+              return GlassCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SwitchListTile.adaptive(
+                      contentPadding: EdgeInsets.zero,
+                      activeTrackColor: AppColors.primary,
+                      title: const Text(
+                        'Full-Screen Sleep Curtain',
+                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      ),
+                      subtitle: const Text(
+                        'Blocks app access 30 min before latest sleep cutoff until morning. High-visibility reminder with no sound.',
+                        style: TextStyle(fontSize: 11, color: AppColors.textTertiary),
+                      ),
+                      value: enfState.isEnabled,
+                      onChanged: (val) => enfNotifier.toggleEnabled(val),
+                    ),
+                    const Divider(color: AppColors.border, height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Preview Curtain', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                            Text('Test how the lock screen looks', style: TextStyle(fontSize: 11, color: AppColors.textTertiary)),
+                          ],
+                        ),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppColors.warning,
+                            side: const BorderSide(color: AppColors.warning),
+                          ),
+                          onPressed: () => enfNotifier.previewOverlay(),
+                          icon: const Icon(Icons.shield_moon_rounded, size: 16),
+                          label: const Text('Preview Lock'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
           const SizedBox(height: 24),
 

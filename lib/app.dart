@@ -5,6 +5,7 @@ import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/sleep/sleep_detail_screen.dart';
 import 'screens/chat/chat_screen.dart';
 import 'screens/settings/settings_screen.dart';
+import 'widgets/sleep_curtain_overlay.dart';
 
 class MomCareApp extends StatelessWidget {
   const MomCareApp({super.key});
@@ -16,6 +17,14 @@ class MomCareApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       routerConfig: _router,
+      builder: (context, child) {
+        return Stack(
+          children: [
+            ?child,
+            const SleepCurtainOverlay(),
+          ],
+        );
+      },
     );
   }
 }
