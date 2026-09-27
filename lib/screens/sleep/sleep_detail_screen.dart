@@ -6,9 +6,12 @@ import '../../theme/colors.dart';
 import '../../utils/time_formatter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/shimmer_loading.dart';
+import '../../models/dashboard_data.dart';
+import '../dashboard/widgets/weekly_sleep_chart.dart';
 import 'widgets/hypnogram_chart.dart';
 import 'widgets/sleep_stage_bar.dart';
 import 'widgets/overnight_hr_chart.dart';
+
 
 final sleepDetailFutureProvider = FutureProvider.autoDispose<Map<String, dynamic>>((ref) async {
   final api = ref.watch(apiServiceProvider);
@@ -57,6 +60,12 @@ class SleepDetailScreen extends ConsumerWidget {
           final hrSamples = hrRaw
               .map((e) => OvernightHeartRate.fromJson(e as Map<String, dynamic>))
               .toList();
+
+          final weeklyRaw = (data['weeklyChart'] as List<dynamic>?) ?? [];
+          final weeklyList = weeklyRaw
+              .map((e) => WeeklySleepItem.fromJson(e as Map<String, dynamic>))
+              .toList();
+
 
           final bedtimeStr = TimeFormatter.formatTime(data['bedtime']);
           final wakeStr = TimeFormatter.formatTime(data['wakeTime']);
@@ -172,9 +181,16 @@ class SleepDetailScreen extends ConsumerWidget {
 
               // Nocturnal Heart Rate curve
               OvernightHrChart(samples: hrSamples),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+
+              // Historical 7-Day Sleep & Wake Schedule
+              if (weeklyList.isNotEmpty) ...[
+                WeeklySleepChart(weeklyData: weeklyList),
+                const SizedBox(height: 24),
+              ],
             ],
           );
+
         },
       ),
     );

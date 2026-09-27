@@ -6,12 +6,14 @@ class WeeklySleepItem {
   final double? sleepHours;
   final int? sleepScore;
   final String? bedtime;
+  final String? wakeTime;
 
   WeeklySleepItem({
     required this.date,
     this.sleepHours,
     this.sleepScore,
     this.bedtime,
+    this.wakeTime,
   });
 
   factory WeeklySleepItem.fromJson(Map<String, dynamic> json) {
@@ -20,9 +22,11 @@ class WeeklySleepItem {
       sleepHours: json['sleepHours'] != null ? (json['sleepHours'] as num).toDouble() : null,
       sleepScore: json['sleepScore'] != null ? (json['sleepScore'] as num).toInt() : null,
       bedtime: json['bedtime'],
+      wakeTime: json['wakeTime'] ?? json['wake_time'],
     );
   }
 }
+
 
 class DashboardData {
   final String date;
