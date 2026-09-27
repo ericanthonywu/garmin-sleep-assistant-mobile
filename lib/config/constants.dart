@@ -10,7 +10,7 @@ class AppConstants {
 
   // Sleep targets
   static const double sleepTargetHours = 8.0;
-  static const String bedtimeTarget = '00:00';
+  static const String bedtimeTarget = '02:00';
   static const int minDeepSleepMinutes = 60;
   static const int minRemSleepMinutes = 90;
 }
