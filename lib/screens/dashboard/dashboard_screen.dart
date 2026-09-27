@@ -130,7 +130,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         TonightTargetCard(
           recommendation: data.sleepEngineRecommendation,
           weeklyHistory: data.weeklyChart,
+          date: data.date,
         ),
+
         const SizedBox(height: 18),
 
         // 2. Daily Sleep & Wake Schedule Timeline Chart

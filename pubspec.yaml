@@ -44,6 +44,7 @@ dependencies:
   shimmer: ^4.0.0
   intl: ^0.20.3
   gap: ^3.0.1
+  home_widget: ^0.10.0
 
 dev_dependencies:
   flutter_test:

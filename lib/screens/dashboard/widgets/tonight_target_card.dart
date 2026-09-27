@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import '../../../../models/dashboard_data.dart';
 import '../../../../models/sleep_recommendation.dart';
 import '../../../../providers/sleep_enforcement_provider.dart';
@@ -10,12 +11,15 @@ import '../../../../widgets/glass_card.dart';
 class TonightTargetCard extends StatelessWidget {
   final SleepRecommendation? recommendation;
   final List<WeeklySleepItem>? weeklyHistory;
+  final String? date;
 
   const TonightTargetCard({
     super.key,
     this.recommendation,
     this.weeklyHistory,
+    this.date,
   });
+
 
   @override
   Widget build(BuildContext context) {
@@ -98,7 +102,59 @@ class TonightTargetCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
+
+          // Date Tag & Freshness Indicator
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryMuted.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: AppColors.primaryMuted.withValues(alpha: 0.35)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.calendar_today_rounded, size: 11, color: AppColors.primary),
+                    const SizedBox(width: 5),
+                    Text(
+                      date != null && DateTime.tryParse(date!) != null
+                          ? DateFormat('EEEE, MMM d').format(DateTime.parse(date!))
+                          : DateFormat('EEEE, MMM d').format(DateTime.now()),
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.primary,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                width: 6,
+                height: 6,
+                decoration: const BoxDecoration(
+                  color: AppColors.success,
+                  shape: BoxShape.circle,
+                ),
+              ),
+              const SizedBox(width: 5),
+              const Text(
+                'Tonight\'s Schedule Active',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+
 
           // Primary Bedtime & Target Wake Row
           Row(
