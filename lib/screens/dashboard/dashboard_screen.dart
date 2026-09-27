@@ -13,11 +13,24 @@ import 'widgets/metric_card.dart';
 import 'widgets/tonight_target_card.dart';
 import 'widgets/weekly_sleep_chart.dart';
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(healthSyncProvider.notifier).syncNow();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final dashboardAsync = ref.watch(dashboardProvider);
     final syncState = ref.watch(healthSyncProvider);
     final theme = Theme.of(context);
@@ -29,6 +42,7 @@ class DashboardScreen extends ConsumerWidget {
           backgroundColor: AppColors.surface,
           onRefresh: () async {
             await ref.read(healthSyncProvider.notifier).syncNow();
+            ref.invalidate(dashboardProvider);
           },
           child: CustomScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
