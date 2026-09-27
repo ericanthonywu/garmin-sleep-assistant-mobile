@@ -36,14 +36,20 @@ class HypnogramChart extends StatelessWidget {
     final sorted = List<SleepStageInterval>.from(stages)
       ..sort((a, b) => a.startTime.compareTo(b.startTime));
 
-    final startTime = sorted.first.startTime;
-    final endTime = sorted.last.endTime;
-    final totalDuration = endTime.difference(startTime).inSeconds;
+    final startTime = sorted.first.startTime.toLocal();
+    final endTime = sorted.last.endTime.toLocal();
+    final totalDurationSecs = endTime.difference(startTime).inSeconds;
+    final totalDurationMins = (totalDurationSecs / 60).round();
+
+    // Identify Deep Sleep & Awake events
+    final deepPeriods = sorted.where((s) => s.stage.toLowerCase() == 'deep').toList();
+    final awakePeriods = sorted.where((s) => s.stage.toLowerCase() == 'awake').toList();
 
     return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -61,6 +67,8 @@ class HypnogramChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
+
+          // Main Chart Canvas with Y-axis labels
           SizedBox(
             height: 130,
             child: Row(
@@ -86,10 +94,215 @@ class HypnogramChart extends StatelessWidget {
                     painter: _HypnogramPainter(
                       stages: sorted,
                       startTime: startTime,
-                      totalDurationSecs: totalDuration > 0 ? totalDuration : 1,
+                      totalDurationSecs: totalDurationSecs > 0 ? totalDurationSecs : 1,
                     ),
                     child: const SizedBox.expand(),
                   ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+
+          // X-AXIS TIME LABELS ROW (aligned with the chart canvas width)
+          Padding(
+            padding: const EdgeInsets.only(left: 56), // 48 width + 8 spacing of Y-axis
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  DateFormat('h:mm a').format(startTime),
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 9, fontWeight: FontWeight.w700),
+                ),
+                if (totalDurationMins > 120) ...[
+                  Text(
+                    DateFormat('h:mm a').format(startTime.add(Duration(minutes: (totalDurationMins * 0.25).round()))),
+                    style: const TextStyle(color: AppColors.textTertiary, fontSize: 9),
+                  ),
+                  Text(
+                    DateFormat('h:mm a').format(startTime.add(Duration(minutes: (totalDurationMins * 0.50).round()))),
+                    style: const TextStyle(color: AppColors.textTertiary, fontSize: 9),
+                  ),
+                  Text(
+                    DateFormat('h:mm a').format(startTime.add(Duration(minutes: (totalDurationMins * 0.75).round()))),
+                    style: const TextStyle(color: AppColors.textTertiary, fontSize: 9),
+                  ),
+                ],
+                Text(
+                  DateFormat('h:mm a').format(endTime),
+                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 9, fontWeight: FontWeight.w700),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          // STAGE EVENT TIMELINE DETAILS: "At what time I enter deep, at what time I awake"
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: AppColors.border.withValues(alpha: 0.8)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.access_time_rounded, size: 14, color: AppColors.primary),
+                    const SizedBox(width: 6),
+                    Text(
+                      'STAGE TRANSITION MILESTONES',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+
+                // Deep Sleep Transitions
+                if (deepPeriods.isNotEmpty) ...[
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        margin: const EdgeInsets.only(top: 3),
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: AppColors.sleepDeep,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            RichText(
+                              text: TextSpan(
+                                style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11),
+                                children: [
+                                  const TextSpan(
+                                    text: 'Entered Deep Sleep: ',
+                                    style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                                  ),
+                                  TextSpan(
+                                    text: DateFormat('h:mm a').format(deepPeriods.first.startTime.toLocal()),
+                                    style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.sleepDeep),
+                                  ),
+                                  if (deepPeriods.length > 1)
+                                    TextSpan(
+                                      text: ' (Total ${deepPeriods.length} cycles)',
+                                      style: const TextStyle(color: AppColors.textTertiary),
+                                    ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              deepPeriods.map((p) {
+                                final s = DateFormat('h:mm a').format(p.startTime.toLocal());
+                                final e = DateFormat('h:mm a').format(p.endTime.toLocal());
+                                final dur = p.durationSecs ~/ 60;
+                                return '$s - $e (${dur}m)';
+                              }).join(' • '),
+                              style: const TextStyle(fontSize: 10, color: AppColors.textSecondary),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+
+                // Nocturnal Awakenings
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 3),
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppColors.sleepAwake,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          RichText(
+                            text: TextSpan(
+                              style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11),
+                              children: [
+                                const TextSpan(
+                                  text: 'Awakenings / Night Interruptions: ',
+                                  style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                                ),
+                                TextSpan(
+                                  text: awakePeriods.isEmpty
+                                      ? 'None (Continuous sleep)'
+                                      : awakePeriods.map((p) {
+                                          final s = DateFormat('h:mm a').format(p.startTime.toLocal());
+                                          final dur = p.durationSecs ~/ 60;
+                                          return '$s (${dur}m)';
+                                        }).join(', '),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    color: awakePeriods.isEmpty ? AppColors.success : AppColors.sleepAwake,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // Final Wake Up
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      margin: const EdgeInsets.only(top: 3),
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: AppColors.momWarm,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: theme.textTheme.bodyMedium?.copyWith(fontSize: 11),
+                          children: [
+                            const TextSpan(
+                              text: 'Morning Wake-Up: ',
+                              style: TextStyle(fontWeight: FontWeight.w700, color: AppColors.textPrimary),
+                            ),
+                            TextSpan(
+                              text: DateFormat('h:mm a').format(endTime),
+                              style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.momWarm),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -122,7 +335,7 @@ class _HypnogramPainter extends CustomPainter {
     final yDeep = size.height * 0.95;
 
     double getY(String stage) {
-      switch (stage) {
+      switch (stage.toLowerCase()) {
         case 'awake':
           return yAwake;
         case 'rem':
@@ -137,7 +350,7 @@ class _HypnogramPainter extends CustomPainter {
     }
 
     Color getColor(String stage) {
-      switch (stage) {
+      switch (stage.toLowerCase()) {
         case 'awake':
           return AppColors.sleepAwake;
         case 'rem':
@@ -165,7 +378,7 @@ class _HypnogramPainter extends CustomPainter {
     Offset? prevPoint;
 
     for (final s in stages) {
-      final startOffset = s.startTime.difference(startTime).inSeconds;
+      final startOffset = s.startTime.toLocal().difference(startTime).inSeconds;
       final x1 = (startOffset / totalDurationSecs * size.width).clamp(0.0, size.width);
       final x2 = ((startOffset + s.durationSecs) / totalDurationSecs * size.width).clamp(0.0, size.width);
       final y = getY(s.stage);
@@ -187,7 +400,7 @@ class _HypnogramPainter extends CustomPainter {
 
       canvas.drawLine(Offset(x1, y), Offset(x2, y), segmentPaint);
 
-      // Subtle fill down
+      // Subtle fill down to bottom
       final fillPaint = Paint()
         ..color = color.withValues(alpha: 0.12)
         ..style = PaintingStyle.fill;

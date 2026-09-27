@@ -32,7 +32,7 @@ class SseService {
 
       final stream = response.data?.stream;
       if (stream == null) {
-        yield "Mama couldn't connect right now nak. Please try again. ❤️";
+        yield 'Unable to establish streaming connection to Health Assistant. Please verify backend status.';
         return;
       }
 
@@ -71,7 +71,7 @@ class SseService {
       }
     } catch (e) {
       debugPrint('[SseService] Streaming error: $e');
-      yield "Mama had trouble sending her reply. Please make sure the backend is running. ❤️";
+      yield 'Unable to reach Health Assistant backend. Please check server connectivity.';
     }
   }
 }

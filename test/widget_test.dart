@@ -42,6 +42,6 @@ void main() {
 
     expect(find.byType(MomCareApp), findsOneWidget);
     expect(find.text('85'), findsOneWidget); // Sleep score
-    expect(find.text('Mama says:'), findsOneWidget);
+    expect(find.text('Morning Briefing'), findsOneWidget);
   });
 }

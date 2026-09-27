@@ -58,29 +58,29 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         title: Row(
           children: [
             Container(
-              width: 30,
-              height: 30,
+              width: 32,
+              height: 32,
               decoration: BoxDecoration(
-                color: AppColors.momCard,
+                color: AppColors.surfaceElevated,
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.momBorder),
+                border: Border.all(color: AppColors.primaryMuted),
               ),
-              child: const Center(child: Text('🧡', style: TextStyle(fontSize: 14))),
+              child: const Icon(Icons.auto_awesome_rounded, size: 16, color: AppColors.primary),
             ),
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Mama',
+                  'Health Assistant',
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 Text(
-                  isStreaming ? 'Typing...' : 'Watching over your rest',
+                  isStreaming ? 'Analyzing data...' : 'Personal Health & Sleep Coach',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: isStreaming ? AppColors.momWarm : AppColors.textTertiary,
+                    color: isStreaming ? AppColors.primary : AppColors.textTertiary,
                     fontSize: 10,
                   ),
                 ),
@@ -101,18 +101,26 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Text('👵', style: TextStyle(fontSize: 48)),
-                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: AppColors.surfaceElevated,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.border),
+                              ),
+                              child: const Icon(Icons.insights_rounded, size: 40, color: AppColors.primary),
+                            ),
+                            const SizedBox(height: 14),
                             Text(
-                              'Mama is here to help you sleep better, nak.',
+                              'Your Personal Health Assistant',
                               style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w600,
+                                fontWeight: FontWeight.w700,
                               ),
                               textAlign: TextAlign.center,
                             ),
                             const SizedBox(height: 6),
                             Text(
-                              'Ask her about your sleep stages, why your deep sleep was short, or for an evening wind-down plan.',
+                              'Ask about your deep sleep quality, resting heart rate, recovery trends, or tonight\'s target bedtime.',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 color: AppColors.textTertiary,
                               ),
@@ -154,7 +162,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       maxLines: 4,
                       textCapitalization: TextCapitalization.sentences,
                       decoration: InputDecoration(
-                        hintText: 'Talk to Mama about your health...',
+                        hintText: 'Ask your health assistant...',
                         hintStyle: TextStyle(color: AppColors.textTertiary, fontSize: 13),
                         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                         filled: true,

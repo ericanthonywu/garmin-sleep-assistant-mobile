@@ -61,42 +61,45 @@ class ChatNotifier extends Notifier<List<ChatMessage>> {
     final selectedDate = ref.read(selectedDateProvider);
     final sse = ref.read(sseServiceProvider);
 
-    try {
-      final stream = sse.streamChat(cleanText, date: selectedDate);
-      String accumulated = '';
+    String accumulated = '';
 
-      await for (final token in stream) {
-        accumulated += token;
-        final updatedList = List<ChatMessage>.from(state);
-        if (updatedList.isNotEmpty && updatedList.last.role == 'mom') {
-          updatedList[updatedList.length - 1] = updatedList.last.copyWith(
-            content: accumulated,
-            isStreaming: true,
-          );
-          state = updatedList;
+    for (int attempt = 1; attempt <= 2; attempt++) {
+      try {
+        final stream = sse.streamChat(cleanText, date: selectedDate);
+
+        await for (final token in stream) {
+          accumulated += token;
+          final updatedList = List<ChatMessage>.from(state);
+          if (updatedList.isNotEmpty && updatedList.last.role == 'mom') {
+            updatedList[updatedList.length - 1] = updatedList.last.copyWith(
+              content: accumulated,
+              isStreaming: true,
+            );
+            state = updatedList;
+          }
+        }
+
+        if (accumulated.isNotEmpty) {
+          break;
+        }
+      } catch (_) {
+        if (attempt < 2) {
+          await Future.delayed(const Duration(milliseconds: 1200));
         }
       }
-
-      final finalList = List<ChatMessage>.from(state);
-      if (finalList.isNotEmpty && finalList.last.role == 'mom') {
-        finalList[finalList.length - 1] = finalList.last.copyWith(
-          content: accumulated,
-          isStreaming: false,
-        );
-        state = finalList;
-      }
-    } catch (e) {
-      final errorList = List<ChatMessage>.from(state);
-      if (errorList.isNotEmpty && errorList.last.role == 'mom') {
-        errorList[errorList.length - 1] = errorList.last.copyWith(
-          content: "Aduh sayang, Mama couldn't finish typing. Please try again. ❤️",
-          isStreaming: false,
-        );
-        state = errorList;
-      }
-    } finally {
-      ref.read(isChatStreamingProvider.notifier).setStreaming(false);
     }
+
+    final finalList = List<ChatMessage>.from(state);
+    if (finalList.isNotEmpty && finalList.last.role == 'mom') {
+      finalList[finalList.length - 1] = finalList.last.copyWith(
+        content: accumulated.isNotEmpty
+            ? accumulated
+            : 'Unable to receive response from Health Assistant. If quota or API key issue persists, check your GEMINI_API_KEY.',
+        isStreaming: false,
+      );
+      state = finalList;
+    }
+    ref.read(isChatStreamingProvider.notifier).setStreaming(false);
   }
 }
 

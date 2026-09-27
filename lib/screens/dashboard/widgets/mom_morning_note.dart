@@ -50,7 +50,7 @@ class MomMorningNote extends StatelessWidget {
               Text(emoji, style: const TextStyle(fontSize: 22)),
               const SizedBox(width: 8),
               Text(
-                'Mama says:',
+                'Morning Briefing',
                 style: theme.textTheme.titleMedium?.copyWith(
                   color: AppColors.momWarm,
                   fontWeight: FontWeight.w700,
@@ -101,7 +101,7 @@ class MomMorningNote extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Reply to Mama',
+                      'Ask Assistant',
                       style: TextStyle(
                         color: AppColors.momWarm,
                         fontWeight: FontWeight.w600,

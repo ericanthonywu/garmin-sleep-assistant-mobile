@@ -50,7 +50,7 @@ final _router = GoRouter(
               BottomNavigationBarItem(
                 icon: Icon(Icons.chat_bubble_outline_rounded),
                 activeIcon: Icon(Icons.chat_bubble_rounded),
-                label: 'Mama',
+                label: 'Assistant',
               ),
             ],
           ),

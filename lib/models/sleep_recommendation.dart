@@ -1,6 +1,8 @@
 class SleepRecommendation {
   final String anchorBedtime;
   final String recommendedBedtime;
+  final String? latestBedtimeCutoff;
+  final String? targetWakeTime;
   final String? windDownStart;
   final int shiftMinutes;
   final int socialJetlag;
@@ -10,6 +12,8 @@ class SleepRecommendation {
   SleepRecommendation({
     required this.anchorBedtime,
     required this.recommendedBedtime,
+    this.latestBedtimeCutoff,
+    this.targetWakeTime,
     this.windDownStart,
     required this.shiftMinutes,
     required this.socialJetlag,
@@ -21,6 +25,8 @@ class SleepRecommendation {
     return SleepRecommendation(
       anchorBedtime: json['anchorBedtime'] ?? '00:00',
       recommendedBedtime: json['recommendedBedtime'] ?? '00:00',
+      latestBedtimeCutoff: json['latestBedtimeCutoff'],
+      targetWakeTime: json['targetWakeTime'],
       windDownStart: json['windDownStart'],
       shiftMinutes: json['shiftMinutes'] ?? 0,
       socialJetlag: json['socialJetlag'] ?? 0,

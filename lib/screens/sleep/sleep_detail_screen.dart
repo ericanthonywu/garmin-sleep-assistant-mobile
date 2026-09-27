@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../../models/sleep_data.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../theme/colors.dart';
+import '../../utils/time_formatter.dart';
 import '../../widgets/glass_card.dart';
 import '../../widgets/shimmer_loading.dart';
 import 'widgets/hypnogram_chart.dart';
@@ -58,12 +58,8 @@ class SleepDetailScreen extends ConsumerWidget {
               .map((e) => OvernightHeartRate.fromJson(e as Map<String, dynamic>))
               .toList();
 
-          final bedtimeStr = data['bedtime'] != null
-              ? DateFormat('h:mm a').format(DateTime.parse(data['bedtime']))
-              : '--';
-          final wakeStr = data['wakeTime'] != null
-              ? DateFormat('h:mm a').format(DateTime.parse(data['wakeTime']))
-              : '--';
+          final bedtimeStr = TimeFormatter.formatTime(data['bedtime']);
+          final wakeStr = TimeFormatter.formatTime(data['wakeTime']);
 
           final deepMins = (data['deepSleepMins'] as num?)?.toInt() ?? 0;
           final lightMins = (data['lightSleepMins'] as num?)?.toInt() ?? 0;

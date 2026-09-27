@@ -12,6 +12,7 @@ import 'widgets/mom_morning_note.dart';
 import 'widgets/metric_card.dart';
 import 'widgets/tonight_target_card.dart';
 import 'widgets/weekly_sleep_chart.dart';
+import 'widgets/daily_sleep_schedule_chart.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -125,17 +126,41 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // Mom's Morning Note Banner
+        // 1. Priority 1: Daily Sleep & Wake Schedule Timeline Chart
+        DailySleepScheduleChart(
+          bedtime: data.bedtime,
+          wakeTime: data.wakeTime,
+          sleepHours: data.sleepHours,
+          deepSleepMins: data.deepSleepMins,
+          lightSleepMins: data.lightSleepMins,
+          remSleepMins: data.remSleepMins,
+          awakeMins: data.awakeMins,
+          sleepStages: data.sleepStages,
+          onTapDetails: () => context.go('/sleep'),
+        ),
+        const SizedBox(height: 18),
+
+        // Tonight's Circadian Sleep Target & Latest Cutoff Card
+        TonightTargetCard(
+          recommendation: data.sleepEngineRecommendation,
+        ),
+        const SizedBox(height: 18),
+
+        // 2. Priority 2: 7-Day Sleep Consistency Chart
+        WeeklySleepChart(weeklyData: data.weeklyChart),
+        const SizedBox(height: 18),
+
+        // 3. AI Sleep & Quality Analysis: Morning Briefing Note
         if (data.morningNote != null && data.morningNote!.isNotEmpty) ...[
           MomMorningNote(
             noteContent: data.morningNote,
             verdict: data.morningVerdict,
             onTalkToMom: () => context.go('/chat'),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 18),
         ],
 
-        // Hero Sleep Score Ring (tappable to navigate to Sleep Detail)
+        // 4. Deprioritized: Sleep Score Ring
         Center(
           child: GestureDetector(
             onTap: () => context.go('/sleep'),
@@ -146,9 +171,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 18),
 
-        // 2x2 Bento Metric Grid
+        // 5. 2x2 Bento Metric Grid
         Row(
           children: [
             Expanded(
@@ -198,16 +223,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ],
         ),
-        const SizedBox(height: 20),
-
-        // Mama's Smart Tonight Bedtime Target
-        TonightTargetCard(
-          recommendation: data.sleepEngineRecommendation,
-        ),
-        const SizedBox(height: 20),
-
-        // 7-day Sleep Consistency Chart
-        WeeklySleepChart(weeklyData: data.weeklyChart),
       ],
     );
   }
@@ -215,10 +230,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget _buildLoadingSkeleton() {
     return const Column(
       children: [
-        ShimmerLoading(width: double.infinity, height: 110, borderRadius: 16),
-        SizedBox(height: 20),
-        ShimmerLoading(width: 170, height: 170, borderRadius: 85),
-        SizedBox(height: 20),
+        ShimmerLoading(width: double.infinity, height: 210, borderRadius: 16),
+        SizedBox(height: 18),
+        ShimmerLoading(width: double.infinity, height: 180, borderRadius: 16),
+        SizedBox(height: 18),
+        ShimmerLoading(width: double.infinity, height: 100, borderRadius: 16),
+        SizedBox(height: 18),
+        ShimmerLoading(width: 160, height: 160, borderRadius: 80),
+        SizedBox(height: 18),
         Row(
           children: [
             Expanded(child: ShimmerLoading(width: double.infinity, height: 95)),
@@ -226,16 +245,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Expanded(child: ShimmerLoading(width: double.infinity, height: 95)),
           ],
         ),
-        SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(child: ShimmerLoading(width: double.infinity, height: 95)),
-            SizedBox(width: 12),
-            Expanded(child: ShimmerLoading(width: double.infinity, height: 95)),
-          ],
-        ),
-        SizedBox(height: 20),
-        ShimmerLoading(width: double.infinity, height: 160, borderRadius: 16),
       ],
     );
   }

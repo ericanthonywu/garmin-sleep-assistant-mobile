@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../models/sleep_recommendation.dart';
 import '../../../../theme/colors.dart';
+import '../../../../utils/time_formatter.dart';
 import '../../../../widgets/glass_card.dart';
 
 class TonightTargetCard extends StatelessWidget {
@@ -41,18 +42,31 @@ class TonightTargetCard extends StatelessWidget {
         break;
     }
 
+    final recommendedBedtimeDisplay = TimeFormatter.formatTime(rec.recommendedBedtime);
+    final latestCutoffDisplay = rec.latestBedtimeCutoff != null
+        ? TimeFormatter.formatTime(rec.latestBedtimeCutoff)
+        : TimeFormatter.formatTime('00:45');
+    final targetWakeDisplay = rec.targetWakeTime != null
+        ? TimeFormatter.formatTime(rec.targetWakeTime)
+        : TimeFormatter.formatTime('07:30');
+    final windDownDisplay = rec.windDownStart != null
+        ? TimeFormatter.formatTime(rec.windDownStart)
+        : null;
+
     return GlassCard(
       color: AppColors.surfaceElevated,
-      borderColor: AppColors.primaryMuted.withValues(alpha: 0.3),
+      borderColor: AppColors.primaryMuted.withValues(alpha: 0.35),
+      padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Header: Title & Adherence Badge
           Row(
             children: [
-              const Icon(Icons.bedtime_rounded, size: 18, color: AppColors.primary),
+              const Icon(Icons.hotel_rounded, size: 18, color: AppColors.primary),
               const SizedBox(width: 8),
               Text(
-                'MAMA\'S TONIGHT BEDTIME TARGET',
+                'CIRCADIAN SLEEP RECOMMENDATIONS',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w700,
@@ -61,10 +75,11 @@ class TonightTargetCard extends StatelessWidget {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: statusColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   statusLabel,
@@ -78,34 +93,52 @@ class TonightTargetCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+
+          // Primary Bedtime & Target Wake Row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    rec.recommendedBedtime,
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 32,
-                      color: AppColors.textPrimary,
+              Expanded(
+                flex: 5,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'RECOMMENDED BEDTIME',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontSize: 10,
+                        color: AppColors.textTertiary,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
                     ),
-                  ),
-                  Text(
-                    rec.shiftMinutes > 0
-                        ? '${rec.shiftMinutes} min earlier than your baseline'
-                        : 'Aligned with your current anchor',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 12,
-                      color: AppColors.textSecondary,
+                    const SizedBox(height: 2),
+                    Text(
+                      recommendedBedtimeDisplay,
+                      style: theme.textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 28,
+                        color: AppColors.textPrimary,
+                        height: 1.1,
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 4),
+                    Text(
+                      rec.shiftMinutes > 0
+                          ? '${rec.shiftMinutes}m earlier shift from anchor'
+                          : 'Aligned with circadian baseline',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontSize: 11,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              if (rec.windDownStart != null)
-                Container(
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 4,
+                child: Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: AppColors.surface,
@@ -113,32 +146,135 @@ class TonightTargetCard extends StatelessWidget {
                     border: Border.all(color: AppColors.border),
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.wb_twilight_rounded, size: 16, color: AppColors.momWarm),
+                      Row(
+                        children: [
+                          const Icon(Icons.alarm_rounded, size: 14, color: AppColors.momWarm),
+                          const SizedBox(width: 4),
+                          Text(
+                            'TARGET WAKE',
+                            style: theme.textTheme.labelSmall?.copyWith(fontSize: 9),
+                          ),
+                        ],
+                      ),
                       const SizedBox(height: 4),
                       Text(
-                        'WIND-DOWN',
-                        style: theme.textTheme.labelSmall?.copyWith(fontSize: 8),
-                      ),
-                      Text(
-                        rec.windDownStart!,
+                        targetWakeDisplay,
                         style: const TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
                           color: AppColors.textPrimary,
                         ),
                       ),
+                      if (windDownDisplay != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          'Wind-down: $windDownDisplay',
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ],
                     ],
                   ),
                 ),
+              ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+
+          // HIGHLIGHTED BOX: LATEST PERMISSIBLE BEDTIME CUTOFF (CIRCADIAN CEILING)
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  AppColors.warning.withValues(alpha: 0.12),
+                  AppColors.surfaceElevated,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: AppColors.warning.withValues(alpha: 0.4),
+                width: 1.2,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: BoxDecoration(
+                        color: AppColors.warning.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: const Icon(
+                        Icons.timer_off_rounded,
+                        size: 16,
+                        color: AppColors.warning,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'LATEST TIME TO SLEEP (CIRCADIAN CEILING)',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w800,
+                              color: AppColors.warning,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const Text(
+                            'Sleep science cutoff threshold',
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: AppColors.textTertiary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Text(
+                      latestCutoffDisplay,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 22,
+                        color: AppColors.warning,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  'Sleeping past $latestCutoffDisplay triggers a circadian phase delay, elevates core nocturnal temperature, and drastically suppresses deep Slow-Wave Sleep (NREM 3). Lights out before this cutoff!',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          // Guidance Note
+          Container(
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: AppColors.surface.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border.withValues(alpha: 0.5)),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,

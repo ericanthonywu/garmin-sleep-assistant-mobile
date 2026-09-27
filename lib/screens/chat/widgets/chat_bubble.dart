@@ -54,12 +54,12 @@ class ChatBubble extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.momCard,
+              color: AppColors.surfaceElevated,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.momBorder, width: 1.5),
+              border: Border.all(color: AppColors.primaryMuted, width: 1.2),
             ),
             child: const Center(
-              child: Text('🧡', style: TextStyle(fontSize: 16)),
+              child: Icon(Icons.auto_awesome_rounded, size: 16, color: AppColors.primary),
             ),
           ),
           const SizedBox(width: 10),
@@ -85,9 +85,9 @@ class ChatBubble extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        'Mama',
+                        'Health Assistant',
                         style: theme.textTheme.labelSmall?.copyWith(
-                          color: AppColors.momWarm,
+                          color: AppColors.primary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -98,7 +98,7 @@ class ChatBubble extends StatelessWidget {
                           height: 8,
                           child: CircularProgressIndicator(
                             strokeWidth: 1.5,
-                            color: AppColors.momWarm,
+                            color: AppColors.primary,
                           ),
                         ),
                       ],
@@ -107,7 +107,7 @@ class ChatBubble extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     message.content.isEmpty && message.isStreaming
-                        ? 'Mama is thinking...'
+                        ? 'Assistant is analyzing...'
                         : message.content,
                     style: TextStyle(
                       color: message.content.isEmpty
