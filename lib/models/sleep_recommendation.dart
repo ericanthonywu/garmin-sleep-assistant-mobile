@@ -8,6 +8,16 @@ class SleepRecommendation {
   final int socialJetlag;
   final String adherenceStatus; // 'advancing', 'holding', 'regressing', 'achieved', 'no_data'
   final String guidance;
+  
+  // New fields
+  final String recommendedSleepOnset;
+  final String? dimLightsStart;
+  final String? habitualWakeTime;
+  final double? sleepNeedHours;
+  final double? sleepDebtHours;
+  final int? onsetVariabilityMins;
+  final int? nightsAnalyzed;
+  final int? outlierNights;
 
   SleepRecommendation({
     required this.anchorBedtime,
@@ -19,6 +29,14 @@ class SleepRecommendation {
     required this.socialJetlag,
     required this.adherenceStatus,
     required this.guidance,
+    required this.recommendedSleepOnset,
+    this.dimLightsStart,
+    this.habitualWakeTime,
+    this.sleepNeedHours,
+    this.sleepDebtHours,
+    this.onsetVariabilityMins,
+    this.nightsAnalyzed,
+    this.outlierNights,
   });
 
   factory SleepRecommendation.fromJson(Map<String, dynamic> json) {
@@ -32,6 +50,14 @@ class SleepRecommendation {
       socialJetlag: json['socialJetlag'] ?? 0,
       adherenceStatus: json['adherenceStatus'] ?? 'holding',
       guidance: json['guidance'] ?? '',
+      recommendedSleepOnset: json['recommendedSleepOnset'] ?? '00:00',
+      dimLightsStart: json['dimLightsStart'],
+      habitualWakeTime: json['habitualWakeTime'],
+      sleepNeedHours: json['sleepNeedHours']?.toDouble(),
+      sleepDebtHours: json['sleepDebtHours']?.toDouble(),
+      onsetVariabilityMins: json['onsetVariabilityMins'],
+      nightsAnalyzed: json['nightsAnalyzed'],
+      outlierNights: json['outlierNights'],
     );
   }
 }

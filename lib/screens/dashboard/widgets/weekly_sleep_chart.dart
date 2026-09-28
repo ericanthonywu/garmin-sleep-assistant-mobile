@@ -10,10 +10,14 @@ enum SleepChartView { schedule, duration }
 
 class WeeklySleepChart extends StatefulWidget {
   final List<WeeklySleepItem> weeklyData;
+  final String? targetBedtime;
+  final String? latestCutoff;
 
   const WeeklySleepChart({
     super.key,
     required this.weeklyData,
+    this.targetBedtime,
+    this.latestCutoff,
   });
 
   @override
@@ -38,6 +42,15 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final data = widget.weeklyData;
+
+    final targetParsed = TimeFormatter.parseTime(widget.targetBedtime ?? '02:00');
+    final cutoffParsed = TimeFormatter.parseTime(widget.latestCutoff ?? '02:45');
+    final targetMins = targetParsed != null
+        ? TimeFormatter.toMinutesPastNoon(targetParsed.hour, targetParsed.minute)
+        : 840; // 02:00 AM
+    final cutoffMins = cutoffParsed != null
+        ? TimeFormatter.toMinutesPastNoon(cutoffParsed.hour, cutoffParsed.minute)
+        : 885; // 02:45 AM
 
     return GlassCard(
       padding: const EdgeInsets.all(18),
@@ -87,7 +100,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
             )
           else ...[
             if (_currentView == SleepChartView.schedule)
-              _buildScheduleChart(context, data)
+              _buildScheduleChart(context, data, targetMins, cutoffMins)
             else
               _buildDurationChart(context, data),
 
@@ -95,7 +108,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
 
             // Active day inspection detail card
             if (_selectedDayIndex != null && _selectedDayIndex! < data.length)
-              _buildDayDetailCard(data[_selectedDayIndex!]),
+              _buildDayDetailCard(data[_selectedDayIndex!], cutoffMins),
 
             const SizedBox(height: 10),
 
@@ -132,7 +145,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
 
             if (_showHistoryList) ...[
               const SizedBox(height: 8),
-              _buildHistoryTable(data),
+              _buildHistoryTable(data, cutoffMins),
             ],
           ],
         ],
@@ -193,7 +206,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
   }
 
   /// Visualizes floating Bedtime-to-Wake-Time bars for each day
-  Widget _buildScheduleChart(BuildContext context, List<WeeklySleepItem> data) {
+  Widget _buildScheduleChart(BuildContext context, List<WeeklySleepItem> data, int targetMins, int cutoffMins) {
     // Timeline window: default 20:00 (8 PM = 480m) to 11:00 (11 AM = 1380m)
     int windowStart = 480;
     int windowEnd = 1380;
@@ -215,9 +228,8 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
     final totalSpan = (windowEnd - windowStart).clamp(360, 1440);
     const chartHeight = 175.0;
 
-    // Target (12:00 AM = 720m) and Cutoff (12:45 AM = 765m) line offsets
-    final targetOffset = ((720 - windowStart) / totalSpan).clamp(0.0, 1.0) * chartHeight;
-    final cutoffOffset = ((765 - windowStart) / totalSpan).clamp(0.0, 1.0) * chartHeight;
+    final targetOffset = ((targetMins - windowStart) / totalSpan).clamp(0.0, 1.0) * chartHeight;
+    final cutoffOffset = ((cutoffMins - windowStart) / totalSpan).clamp(0.0, 1.0) * chartHeight;
 
     return Column(
       children: [
@@ -227,14 +239,14 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
           children: [
             Row(
               children: [
-                _buildDot(AppColors.primary, 'On Time (<= 12:45 AM)'),
+                _buildDot(AppColors.primary, 'On Time (≤ ${TimeFormatter.formatTime(widget.latestCutoff ?? "02:45")})'),
                 const SizedBox(width: 12),
-                _buildDot(AppColors.danger, 'Late (> 12:45 AM)'),
+                _buildDot(AppColors.danger, 'Late (> ${TimeFormatter.formatTime(widget.latestCutoff ?? "02:45")})'),
               ],
             ),
-            const Text(
-              '🎯 Target 12:00 AM',
-              style: TextStyle(
+            Text(
+              '🎯 Target ${TimeFormatter.formatTime(widget.targetBedtime ?? "02:00")}',
+              style: const TextStyle(
                 color: AppColors.primary,
                 fontSize: 10,
                 fontWeight: FontWeight.w600,
@@ -339,6 +351,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
                           totalSpan: totalSpan,
                           chartHeight: chartHeight,
                           isSelected: isSelected,
+                          cutoffMins: cutoffMins,
                         ),
                       ),
                     );
@@ -409,6 +422,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
     required int totalSpan,
     required double chartHeight,
     required bool isSelected,
+    required int cutoffMins,
   }) {
     final parsedBed = TimeFormatter.parseTime(item.bedtime);
     final parsedWake = TimeFormatter.parseTime(item.wakeTime);
@@ -436,8 +450,8 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
     final barTop = topRatio * chartHeight;
     final barHeight = ((botRatio - topRatio) * chartHeight).clamp(24.0, chartHeight);
 
-    // Is bedtime after 12:45 AM (765m)?
-    final isLate = bedMin > 765;
+    // Is bedtime after latest cutoff?
+    final isLate = bedMin > cutoffMins;
 
     final gradientColors = isLate
         ? [AppColors.warning, AppColors.danger]
@@ -525,7 +539,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
   }
 
   /// Detail inspection card for tapped day
-  Widget _buildDayDetailCard(WeeklySleepItem item) {
+  Widget _buildDayDetailCard(WeeklySleepItem item, int cutoffMins) {
     final dt = DateTime.tryParse(item.date);
     final dateDisplay = dt != null ? DateFormat('EEEE, MMM d').format(dt) : item.date;
     final bedtimeStr = TimeFormatter.formatTime(item.bedtime);
@@ -533,7 +547,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
     final durationStr = item.sleepHours != null ? '${item.sleepHours} hrs' : '--';
 
     final parsedBed = TimeFormatter.parseTime(item.bedtime);
-    final isLate = parsedBed != null && TimeFormatter.toMinutesPastNoon(parsedBed.hour, parsedBed.minute) > 765;
+    final isLate = parsedBed != null && TimeFormatter.toMinutesPastNoon(parsedBed.hour, parsedBed.minute) > cutoffMins;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -622,7 +636,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
   }
 
   /// 7-Day History Table
-  Widget _buildHistoryTable(List<WeeklySleepItem> data) {
+  Widget _buildHistoryTable(List<WeeklySleepItem> data, int cutoffMins) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
@@ -655,7 +669,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
             final sleepStr = item.sleepHours != null ? '${item.sleepHours}h' : '--';
 
             final parsedBed = TimeFormatter.parseTime(item.bedtime);
-            final isLate = parsedBed != null && TimeFormatter.toMinutesPastNoon(parsedBed.hour, parsedBed.minute) > 765;
+            final isLate = parsedBed != null && TimeFormatter.toMinutesPastNoon(parsedBed.hour, parsedBed.minute) > cutoffMins;
 
             return Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),

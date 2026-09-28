@@ -27,8 +27,8 @@ class SleepEnforcementState {
       return false;
     }
 
-    final cutoff = activeCutoff ?? '00:45';
-    final wake = targetWake ?? '07:30';
+    final cutoff = activeCutoff ?? '02:45';
+    final wake = targetWake ?? '10:00';
 
     final parsedCutoff = TimeFormatter.parseTime(cutoff);
     final parsedWake = TimeFormatter.parseTime(wake);
@@ -90,15 +90,15 @@ class SleepEnforcementNotifier extends Notifier<SleepEnforcementState> {
       final rec = next.value?.sleepEngineRecommendation;
       if (rec != null) {
         state = state.copyWith(
-          activeCutoff: rec.latestBedtimeCutoff ?? '00:45',
-          targetWake: rec.targetWakeTime ?? '07:30',
+          activeCutoff: rec.latestBedtimeCutoff ?? '02:45',
+          targetWake: rec.targetWakeTime ?? '10:00',
         );
       }
     });
 
     return const SleepEnforcementState(
-      activeCutoff: '00:45',
-      targetWake: '07:30',
+      activeCutoff: '02:45',
+      targetWake: '10:00',
     );
   }
 

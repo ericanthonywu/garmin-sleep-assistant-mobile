@@ -106,7 +106,7 @@ void main() {
     expect(find.text('Duration'), findsWidgets);
 
     // Verify Schedule View Guidelines
-    expect(find.text('🎯 Target 12:00 AM'), findsOneWidget);
+    expect(find.text('🎯 Target 2:00 AM'), findsOneWidget);
 
     // Toggle to Duration View
     await tester.tap(find.text('Duration').first);

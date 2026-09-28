@@ -150,7 +150,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         const SizedBox(height: 18),
 
         // 2. Priority 2: 7-Day Sleep Consistency Chart
-        WeeklySleepChart(weeklyData: data.weeklyChart),
+        WeeklySleepChart(
+          weeklyData: data.weeklyChart,
+          targetBedtime: data.sleepEngineRecommendation?.recommendedBedtime,
+          latestCutoff: data.sleepEngineRecommendation?.latestBedtimeCutoff,
+        ),
         const SizedBox(height: 18),
 
         // 3. AI Sleep & Quality Analysis: Morning Briefing Note

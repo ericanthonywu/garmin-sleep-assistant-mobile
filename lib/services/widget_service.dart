@@ -38,9 +38,11 @@ class WidgetService {
       await HomeWidget.saveWidgetData<String>('formatted_date', formattedDate);
       await HomeWidget.saveWidgetData<String>('date_iso', data.date);
       await HomeWidget.saveWidgetData<String>('wake_time', rec.targetWakeTime);
+      await HomeWidget.saveWidgetData<String>('wind_down_start', rec.windDownStart);
+      await HomeWidget.saveWidgetData<String>('sleep_onset', rec.recommendedSleepOnset);
       await HomeWidget.saveWidgetData<String>(
         'status_text',
-        'Target: ${rec.recommendedBedtime} • Cutoff: ${rec.latestBedtimeCutoff}',
+        'In Bed: ${rec.recommendedBedtime} • Cutoff: ${rec.latestBedtimeCutoff}',
       );
       await HomeWidget.saveWidgetData<String>(
         'last_updated',
