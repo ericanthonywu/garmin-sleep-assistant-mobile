@@ -46,24 +46,24 @@ class OvernightHrChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.favorite_rounded, size: 14, color: AppColors.danger),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'NOCTURNAL HR CURVE',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.8,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              const SizedBox(width: 8),
               Row(
-                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.favorite_rounded, size: 14, color: AppColors.danger),
+                  const SizedBox(width: 6),
+                  Text(
+                    'NOCTURNAL HR CURVE',
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
                 children: [
                   _statBadge('Min', '$minBpm', AppColors.success),
                   const SizedBox(width: 5),
