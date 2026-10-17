@@ -37,14 +37,16 @@ class HealthKitService {
     }
   }
 
-  /// Fetch sleep intervals for target date.
-  /// Window: 4:00 PM yesterday to 9:00 PM today to fully cover daytime and late night owls.
+  /// Fetch sleep intervals for the night ending on [date], sorted by start time.
+  /// A night owns every segment starting between noon yesterday and noon today, so
+  /// consecutive days never share a segment. Segments come from a single source
+  /// (the one with the most sleep) because Garmin and Apple Watch both write here.
   Future<List<Map<String, dynamic>>> fetchSleepStages(DateTime date) async {
     if (!Platform.isIOS) return [];
 
     try {
-      final start = DateTime(date.year, date.month, date.day - 1, 16, 0);
-      final end = DateTime(date.year, date.month, date.day, 21, 0);
+      final nightStart = DateTime(date.year, date.month, date.day - 1, 12, 0);
+      final nightEnd = DateTime(date.year, date.month, date.day, 12, 0);
 
       final points = await _health.getHealthDataFromTypes(
         types: [
@@ -54,27 +56,41 @@ class HealthKitService {
           HealthDataType.SLEEP_AWAKE,
           HealthDataType.SLEEP_ASLEEP,
         ],
-        startTime: start,
-        endTime: end,
+        startTime: nightStart,
+        endTime: nightEnd.add(const Duration(hours: 6)),
       );
 
-      final result = <Map<String, dynamic>>[];
+      final bySource = <String, List<HealthDataPoint>>{};
       for (final p in points) {
-        final stage = _mapTypeToStage(p.type);
-        if (stage == null) continue;
-
-        final duration = p.dateTo.difference(p.dateFrom).inSeconds;
-        if (duration <= 0) continue;
-
-        result.add({
-          'stage': stage,
-          'startTime': p.dateFrom.toIso8601String(),
-          'endTime': p.dateTo.toIso8601String(),
-          'durationSecs': duration,
-        });
+        if (p.dateFrom.isBefore(nightStart) || !p.dateFrom.isBefore(nightEnd)) continue;
+        if (!p.dateTo.isAfter(p.dateFrom) || _mapTypeToStage(p.type) == null) continue;
+        bySource.putIfAbsent(p.sourceId, () => []).add(p);
       }
+      if (bySource.isEmpty) return [];
 
-      return result;
+      int asleepSecs(List<HealthDataPoint> pts) => pts
+          .where((p) => p.type != HealthDataType.SLEEP_AWAKE)
+          .fold(0, (sum, p) => sum + p.dateTo.difference(p.dateFrom).inSeconds);
+      var chosen = bySource.values.reduce((a, b) => asleepSecs(a) >= asleepSecs(b) ? a : b);
+
+      // Generic "asleep" samples cover the same time as staged ones; keep them only when unstaged.
+      final hasStages = chosen.any((p) =>
+          p.type == HealthDataType.SLEEP_DEEP ||
+          p.type == HealthDataType.SLEEP_LIGHT ||
+          p.type == HealthDataType.SLEEP_REM);
+      if (hasStages) {
+        chosen = chosen.where((p) => p.type != HealthDataType.SLEEP_ASLEEP).toList();
+      }
+      chosen.sort((a, b) => a.dateFrom.compareTo(b.dateFrom));
+
+      return chosen
+          .map((p) => {
+                'stage': _mapTypeToStage(p.type),
+                'startTime': p.dateFrom.toUtc().toIso8601String(),
+                'endTime': p.dateTo.toUtc().toIso8601String(),
+                'durationSecs': p.dateTo.difference(p.dateFrom).inSeconds,
+              })
+          .toList();
     } catch (e) {
       debugPrint('[HealthKitService] Error fetching sleep stages: $e');
       return [];
@@ -105,7 +121,7 @@ class HealthKitService {
 
         if (val != null && val > 0) {
           result.add({
-            'timestamp': p.dateFrom.toIso8601String(),
+            'timestamp': p.dateFrom.toUtc().toIso8601String(),
             'bpm': val.round(),
             'context': 'sleep',
           });

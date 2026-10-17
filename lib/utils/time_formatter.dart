@@ -95,6 +95,12 @@ class TimeFormatter {
     }
   }
 
+  /// Formats seconds into 'Xh Ym', or '--' when unknown.
+  static String formatDurationSecs(num? secs) {
+    if (secs == null || secs <= 0) return '--';
+    return formatDurationMinutes((secs / 60).round());
+  }
+
   /// Formats minutes into 'Xh Ym' or 'Ym'.
   static String formatDurationMinutes(int minutes) {
     if (minutes <= 0) return '0m';

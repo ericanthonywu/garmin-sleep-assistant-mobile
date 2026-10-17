@@ -164,6 +164,10 @@ class SleepDetailScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: 14),
+
+              // Magnesium Supplement Status Card
+              _buildMagnesiumCard(theme, data['magnesium']),
               const SizedBox(height: 16),
 
               // Sleep Hypnogram (Stage transitions)
@@ -190,8 +194,86 @@ class SleepDetailScreen extends ConsumerWidget {
               ],
             ],
           );
-
         },
+      ),
+    );
+  }
+
+  Widget _buildMagnesiumCard(ThemeData theme, dynamic magnesiumRaw) {
+    final Map<String, dynamic>? mag =
+        magnesiumRaw is Map<String, dynamic> ? magnesiumRaw : null;
+    final bool isTaken = mag?['taken'] == true;
+    final String? takenAt = mag?['takenAt'] ?? mag?['taken_at'];
+
+    return GlassCard(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: isTaken
+                  ? AppColors.success.withValues(alpha: 0.15)
+                  : AppColors.surfaceElevated,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isTaken ? Icons.check_circle_rounded : Icons.medication_rounded,
+              size: 18,
+              color: isTaken ? AppColors.success : AppColors.textTertiary,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'MAGNESIUM SUPPLEMENT',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: isTaken ? AppColors.success : AppColors.textTertiary,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: isTaken
+                            ? AppColors.success.withValues(alpha: 0.15)
+                            : AppColors.surfaceElevated,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        isTaken ? 'LOGGED' : 'NOT TAKEN',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: isTaken ? AppColors.success : AppColors.textTertiary,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  isTaken
+                      ? (takenAt != null
+                          ? 'Taken at $takenAt • Promoted neuromuscular calm & NREM 3 deep sleep'
+                          : 'Taken before bedtime • Promoted neuromuscular calm & NREM 3 deep sleep')
+                      : 'Not logged for this night • Consider taking 30-60m before bed to boost restorative slow-wave sleep',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontSize: 11.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

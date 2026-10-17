@@ -49,9 +49,12 @@ class HealthSyncNotifier extends AsyncNotifier<String?> {
         final validSleep = sleepStages.where((s) => s['stage'] != 'awake').toList();
         if (validSleep.isNotEmpty) {
           final first = DateTime.tryParse(validSleep.first['startTime'] as String? ?? '');
-          final last = DateTime.tryParse(validSleep.last['endTime'] as String? ?? '');
-          if (first != null) localBedtime = DateFormat('HH:mm').format(first);
-          if (last != null) localWakeTime = DateFormat('HH:mm').format(last);
+          final ends = validSleep
+              .map((s) => DateTime.tryParse(s['endTime'] as String? ?? ''))
+              .whereType<DateTime>();
+          final last = ends.isEmpty ? null : ends.reduce((a, b) => a.isAfter(b) ? a : b);
+          if (first != null) localBedtime = DateFormat('HH:mm').format(first.toLocal());
+          if (last != null) localWakeTime = DateFormat('HH:mm').format(last.toLocal());
           final totalSecs = validSleep.fold<int>(0, (sum, s) => sum + (s['durationSecs'] as int? ?? 0));
           if (totalSecs > 0) sleepHours = totalSecs / 3600.0;
         }

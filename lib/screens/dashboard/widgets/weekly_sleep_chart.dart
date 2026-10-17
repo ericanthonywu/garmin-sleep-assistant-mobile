@@ -544,7 +544,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
     final dateDisplay = dt != null ? DateFormat('EEEE, MMM d').format(dt) : item.date;
     final bedtimeStr = TimeFormatter.formatTime(item.bedtime);
     final wakeStr = TimeFormatter.formatTime(item.wakeTime);
-    final durationStr = item.sleepHours != null ? '${item.sleepHours} hrs' : '--';
+    final durationStr = item.sleepDurationLabel;
 
     final parsedBed = TimeFormatter.parseTime(item.bedtime);
     final isLate = parsedBed != null && TimeFormatter.toMinutesPastNoon(parsedBed.hour, parsedBed.minute) > cutoffMins;
@@ -606,7 +606,23 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
               ),
             ],
           ),
-
+          if (item.magnesiumTaken) ...[
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                const Text('💊', style: TextStyle(fontSize: 11)),
+                const SizedBox(width: 4),
+                const Text(
+                  'Magnesium taken before bed',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -666,7 +682,7 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
             final dayStr = dt != null ? DateFormat('E, MMM d').format(dt) : item.date;
             final bedStr = TimeFormatter.formatTime(item.bedtime);
             final wakeStr = TimeFormatter.formatTime(item.wakeTime);
-            final sleepStr = item.sleepHours != null ? '${item.sleepHours}h' : '--';
+            final sleepStr = item.sleepDurationLabel;
 
             final parsedBed = TimeFormatter.parseTime(item.bedtime);
             final isLate = parsedBed != null && TimeFormatter.toMinutesPastNoon(parsedBed.hour, parsedBed.minute) > cutoffMins;
@@ -680,9 +696,21 @@ class _WeeklySleepChartState extends State<WeeklySleepChart> {
                 children: [
                   Expanded(
                     flex: 3,
-                    child: Text(
-                      dayStr,
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Flexible(
+                          child: Text(
+                            dayStr,
+                            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (item.magnesiumTaken) ...[
+                          const SizedBox(width: 4),
+                          const Text('💊', style: TextStyle(fontSize: 9)),
+                        ],
+                      ],
                     ),
                   ),
                   Expanded(

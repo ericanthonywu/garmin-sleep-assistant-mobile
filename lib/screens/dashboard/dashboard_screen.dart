@@ -6,9 +6,9 @@ import '../../models/dashboard_data.dart';
 import '../../providers/dashboard_provider.dart';
 import '../../providers/health_sync_provider.dart';
 import '../../theme/colors.dart';
+import '../../utils/time_formatter.dart';
 import '../../widgets/shimmer_loading.dart';
 import 'widgets/sleep_score_ring.dart';
-import 'widgets/mom_morning_note.dart';
 import 'widgets/metric_card.dart';
 import 'widgets/tonight_target_card.dart';
 import 'widgets/weekly_sleep_chart.dart';
@@ -121,7 +121,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   }
 
   Widget _buildDashboardContent(BuildContext context, DashboardData data) {
-    final sleepDurationStr = data.sleepHours != null ? '${data.sleepHours}h' : null;
+    final sleepSecs = data.sleepSecs ?? (data.sleepHours != null ? data.sleepHours! * 3600 : null);
+    final sleepDurationStr = sleepSecs != null ? TimeFormatter.formatDurationSecs(sleepSecs) : null;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -131,6 +132,26 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           recommendation: data.sleepEngineRecommendation,
           weeklyHistory: data.weeklyChart,
           date: data.date,
+          magnesium: data.magnesium,
+          onToggleMagnesium: (taken) async {
+            await ref.read(magnesiumProvider.notifier).toggleMagnesium(
+              date: data.date,
+              taken: taken,
+            );
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    taken
+                        ? 'Magnesium vitamin logged! 💊'
+                        : 'Magnesium log reverted',
+                  ),
+                  duration: const Duration(seconds: 2),
+                  backgroundColor: taken ? const Color(0xFF15803D) : AppColors.surfaceElevated,
+                ),
+              );
+            }
+          },
         ),
 
         const SizedBox(height: 18),
@@ -140,6 +161,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           bedtime: data.bedtime,
           wakeTime: data.wakeTime,
           sleepHours: data.sleepHours,
+          sleepSecs: data.sleepSecs,
           deepSleepMins: data.deepSleepMins,
           lightSleepMins: data.lightSleepMins,
           remSleepMins: data.remSleepMins,
@@ -157,17 +179,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         ),
         const SizedBox(height: 18),
 
-        // 3. AI Sleep & Quality Analysis: Morning Briefing Note
-        if (data.morningNote != null && data.morningNote!.isNotEmpty) ...[
-          MomMorningNote(
-            noteContent: data.morningNote,
-            verdict: data.morningVerdict,
-            onTalkToMom: () => context.go('/chat'),
-          ),
-          const SizedBox(height: 18),
-        ],
-
-        // 4. Deprioritized: Sleep Score Ring
+        // 3. Sleep Score Ring
         Center(
           child: GestureDetector(
             onTap: () => context.go('/sleep'),

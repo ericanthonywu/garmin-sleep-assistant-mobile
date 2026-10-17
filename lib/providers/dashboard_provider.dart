@@ -23,8 +23,48 @@ final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async 
   final data = await api.getDashboard(date: date);
 
   // Auto-refresh iOS Home Screen widget with latest bedtime recommendation & date
-  WidgetService.updateFromDashboard(data);
+  // Only update widget when viewing today's data so historical navigation doesn't overwrite the widget
+  final todayStr = DateFormat('yyyy-MM-dd').format(DateTime.now());
+  if (data.date == todayStr || date == todayStr) {
+    await WidgetService.updateFromDashboard(data);
+  }
 
   return data;
 });
+
+class MagnesiumNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<bool> toggleMagnesium({
+    required String date,
+    required bool taken,
+    String? dosage,
+    String? notes,
+  }) async {
+    state = const AsyncValue.loading();
+    try {
+      final api = ref.read(apiServiceProvider);
+      await api.logMagnesium(
+        date: date,
+        taken: taken,
+        dosage: dosage,
+        notes: notes,
+      );
+      ref.invalidate(dashboardProvider);
+      state = const AsyncValue.data(null);
+      return true;
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+      return false;
+    }
+  }
+
+  Future<void> sendTestReminder() async {
+    final api = ref.read(apiServiceProvider);
+    await api.sendMagnesiumReminder();
+  }
+}
+
+final magnesiumProvider = AsyncNotifierProvider<MagnesiumNotifier, void>(MagnesiumNotifier.new);
 

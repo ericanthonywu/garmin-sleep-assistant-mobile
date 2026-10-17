@@ -1,14 +1,40 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'theme/app_theme.dart';
+import 'providers/dashboard_provider.dart';
 import 'screens/dashboard/dashboard_screen.dart';
 import 'screens/sleep/sleep_detail_screen.dart';
 import 'screens/chat/chat_screen.dart';
 import 'screens/settings/settings_screen.dart';
-import 'widgets/sleep_curtain_overlay.dart';
+import 'widgets/morning_briefing_fab.dart';
 
-class MomCareApp extends StatelessWidget {
+class MomCareApp extends ConsumerStatefulWidget {
   const MomCareApp({super.key});
+
+  @override
+  ConsumerState<MomCareApp> createState() => _MomCareAppState();
+}
+
+class _MomCareAppState extends ConsumerState<MomCareApp> {
+  late final AppLifecycleListener _lifecycleListener;
+
+  @override
+  void initState() {
+    super.initState();
+    _lifecycleListener = AppLifecycleListener(
+      onResume: () {
+        // Automatically refresh dashboard and home screen widget whenever the app returns to foreground
+        ref.invalidate(dashboardProvider);
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _lifecycleListener.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -17,14 +43,6 @@ class MomCareApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.dark,
       routerConfig: _router,
-      builder: (context, child) {
-        return Stack(
-          children: [
-            ?child,
-            const SleepCurtainOverlay(),
-          ],
-        );
-      },
     );
   }
 }
@@ -39,6 +57,12 @@ final _router = GoRouter(
       builder: (context, state, navigationShell) {
         return Scaffold(
           body: navigationShell,
+          floatingActionButton: MorningBriefingFab(
+            currentTabIndex: navigationShell.currentIndex,
+          ),
+          floatingActionButtonLocation: MorningBriefingFabLocation(
+            navigationShell.currentIndex,
+          ),
           bottomNavigationBar: BottomNavigationBar(
             currentIndex: navigationShell.currentIndex,
             onTap: (index) => navigationShell.goBranch(

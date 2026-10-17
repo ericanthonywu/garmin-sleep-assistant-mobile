@@ -8,6 +8,7 @@ class DailySleepScheduleChart extends StatelessWidget {
   final String? bedtime;
   final String? wakeTime;
   final double? sleepHours;
+  final int? sleepSecs;
   final int deepSleepMins;
   final int lightSleepMins;
   final int remSleepMins;
@@ -20,6 +21,7 @@ class DailySleepScheduleChart extends StatelessWidget {
     this.bedtime,
     this.wakeTime,
     this.sleepHours,
+    this.sleepSecs,
     this.deepSleepMins = 0,
     this.lightSleepMins = 0,
     this.remSleepMins = 0,
@@ -42,12 +44,12 @@ class DailySleepScheduleChart extends StatelessWidget {
     final wakeDisplay = TimeFormatter.formatTime(wakeTime);
     final wake24 = TimeFormatter.format24h(wakeTime);
 
-    // Calculate total duration in minutes
+    // Prefer the device-reported total; per-stage minutes are rounded individually and drift.
     final totalStageMins = deepSleepMins + lightSleepMins + remSleepMins;
-    final displayHours = sleepHours ?? (totalStageMins > 0 ? (totalStageMins / 60.0) : 0.0);
-    final durationStr = totalStageMins > 0
-        ? TimeFormatter.formatDurationMinutes(totalStageMins)
-        : '${displayHours.toStringAsFixed(1)} hrs';
+    final totalSecs = sleepSecs ??
+        (sleepHours != null ? sleepHours! * 3600 : (totalStageMins > 0 ? totalStageMins * 60 : null));
+    final displayHours = totalSecs != null ? totalSecs / 3600 : 0.0;
+    final durationStr = TimeFormatter.formatDurationSecs(totalSecs);
 
     return GlassCard(
       onTap: onTapDetails,

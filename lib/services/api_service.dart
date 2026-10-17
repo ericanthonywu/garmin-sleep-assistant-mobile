@@ -73,4 +73,32 @@ class ApiService {
     final list = res.data['data'] as List<dynamic>? ?? [];
     return list.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>)).toList();
   }
+
+  Future<Map<String, dynamic>> logMagnesium({
+    required String date,
+    required bool taken,
+    String? dosage,
+    String? notes,
+  }) async {
+    final payload = <String, dynamic>{
+      'date': date,
+      'taken': taken,
+      if (dosage != null) 'dosage': dosage,
+      if (notes != null) 'notes': notes,
+    };
+    final res = await _dio.post('/supplements/magnesium', data: payload);
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<Map<String, dynamic>> getMagnesiumStatus({String? date}) async {
+    final res = await _dio.get(
+      '/supplements/magnesium',
+      queryParameters: date != null ? {'date': date} : null,
+    );
+    return res.data as Map<String, dynamic>;
+  }
+
+  Future<void> sendMagnesiumReminder() async {
+    await _dio.post('/supplements/magnesium/remind');
+  }
 }

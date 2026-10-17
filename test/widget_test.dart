@@ -3,8 +3,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:garmin_momcare/app.dart';
 import 'package:garmin_momcare/models/dashboard_data.dart';
+import 'package:garmin_momcare/models/sleep_recommendation.dart';
 import 'package:garmin_momcare/providers/dashboard_provider.dart';
 import 'package:garmin_momcare/screens/dashboard/widgets/weekly_sleep_chart.dart';
+import 'package:garmin_momcare/screens/dashboard/widgets/tonight_target_card.dart';
 
 void main() {
   testWidgets('MomCareApp renders correctly with dashboard data', (WidgetTester tester) async {
@@ -61,6 +63,29 @@ void main() {
     expect(find.text('85'), findsOneWidget); // Sleep score
     expect(find.text('Morning Briefing'), findsOneWidget);
     expect(find.text('7-DAY SLEEP SCHEDULE'), findsOneWidget);
+
+    // Tap Morning Briefing FAB to open modal sheet
+    await tester.tap(find.text('Morning Briefing'));
+    await tester.pumpAndSettle();
+
+    // Verify Morning Briefing sheet content
+    expect(find.text('Good morning! You slept consistently well.'), findsOneWidget);
+    expect(find.text('GOOD'), findsOneWidget);
+    expect(find.text('MAGNESIUM'), findsOneWidget);
+    expect(find.text('Discuss with Assistant'), findsOneWidget);
+
+    // Tap Discuss with Assistant to navigate to chat
+    await tester.tap(find.text('Discuss with Assistant'));
+    await tester.pumpAndSettle();
+
+    // Verify navigated to Assistant and FAB is still present everywhere
+    expect(find.text('Health Assistant'), findsOneWidget);
+    expect(find.text('Morning Briefing'), findsOneWidget);
+
+    // Switch to Sleep tab and verify FAB is also present there
+    await tester.tap(find.byIcon(Icons.bedtime_outlined));
+    await tester.pumpAndSettle();
+    expect(find.text('Morning Briefing'), findsOneWidget);
   });
 
   testWidgets('WeeklySleepChart renders bed and wake schedule and toggles views', (WidgetTester tester) async {
@@ -128,5 +153,76 @@ void main() {
     expect(find.text('Hide Daily History Table'), findsOneWidget);
     expect(find.text('Bedtime'), findsOneWidget);
     expect(find.text('Wake'), findsOneWidget);
+  });
+
+  testWidgets('TonightTargetCard renders magnesium reminder and handles logging toggle', (WidgetTester tester) async {
+    bool? loggedState;
+    final rec = SleepRecommendation(
+      anchorBedtime: '01:45',
+      recommendedBedtime: '01:30',
+      latestBedtimeCutoff: '02:15',
+      targetWakeTime: '09:30',
+      windDownStart: '00:30',
+      magnesiumReminderTime: '00:45',
+      shiftMinutes: 15,
+      stepMinutes: 15,
+      socialJetlag: 0,
+      adherenceStatus: 'advancing',
+      guidance: 'Great sleep progress.',
+      recommendedSleepOnset: '01:45',
+    );
+
+    // Initial state: Not taken
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: TonightTargetCard(
+              recommendation: rec,
+              date: '2026-10-18',
+              magnesium: MagnesiumLog(taken: false),
+              onToggleMagnesium: (taken) {
+                loggedState = taken;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+    expect(find.text('Magnesium Vitamin'), findsOneWidget);
+    expect(find.text('· 12:45 AM'), findsOneWidget);
+    expect(find.text('Log Taken'), findsOneWidget);
+
+    // Tap Log Taken
+    await tester.tap(find.text('Log Taken'));
+    await tester.pump();
+    expect(loggedState, true);
+
+    // Re-pump with taken: true
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: TonightTargetCard(
+              recommendation: rec,
+              date: '2026-10-18',
+              magnesium: MagnesiumLog(taken: true, takenAt: '00:45'),
+              onToggleMagnesium: (taken) {
+                loggedState = taken;
+              },
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+    expect(find.text('Undo'), findsOneWidget);
+    expect(find.text('Taken at 00:45 ✓ Muscle relax & GABA active'), findsOneWidget);
+
+    await tester.tap(find.text('Undo'));
+    await tester.pump();
+    expect(loggedState, false);
   });
 }

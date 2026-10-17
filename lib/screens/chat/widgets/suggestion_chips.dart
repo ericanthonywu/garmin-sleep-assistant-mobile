@@ -10,6 +10,7 @@ class SuggestionChips extends StatelessWidget {
   });
 
   static const _suggestions = [
+    'Did magnesium help my sleep?',
     'Why was my deep sleep low?',
     'Suggest a wind-down routine',
     'How is my weekly sleep trend?',

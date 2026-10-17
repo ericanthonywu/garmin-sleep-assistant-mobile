@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../../models/dashboard_data.dart';
 import '../../../../models/sleep_recommendation.dart';
-import '../../../../providers/sleep_enforcement_provider.dart';
 import '../../../../theme/colors.dart';
 import '../../../../utils/time_formatter.dart';
 import '../../../../widgets/glass_card.dart';
@@ -12,12 +10,16 @@ class TonightTargetCard extends StatelessWidget {
   final SleepRecommendation? recommendation;
   final List<WeeklySleepItem>? weeklyHistory;
   final String? date;
+  final MagnesiumLog? magnesium;
+  final ValueChanged<bool>? onToggleMagnesium;
 
   const TonightTargetCard({
     super.key,
     this.recommendation,
     this.weeklyHistory,
     this.date,
+    this.magnesium,
+    this.onToggleMagnesium,
   });
 
   @override
@@ -156,8 +158,8 @@ class TonightTargetCard extends StatelessWidget {
                   child: _buildTimeMetric(
                     label: 'WAKE UP',
                     timeStr: targetWakeDisplay,
-                    subtitle: rec.sleepNeedHours != null
-                        ? '${rec.sleepNeedHours}h need'
+                    subtitle: rec.sleepNeedMins != null
+                        ? '${TimeFormatter.formatDurationMinutes(rec.sleepNeedMins!)} need'
                         : 'Target wake',
                     timeColor: AppColors.textPrimary,
                     subtitleColor: AppColors.textTertiary,
@@ -175,20 +177,24 @@ class TonightTargetCard extends StatelessWidget {
             target: recommendedBedtimeDisplay,
             cutoff: latestCutoffDisplay,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
+
+          // 3.2. Magnesium Vitamin Reminder & Quick Logging Bar
+          _buildMagnesiumReminderBar(context, rec),
+          const SizedBox(height: 12),
 
           // 3.5. Insight chips (sleep debt, onset variability)
-          if (rec.sleepDebtHours != null && rec.sleepDebtHours! > 0.5 ||
+          if (rec.sleepDebtMins != null && rec.sleepDebtMins! > 30 ||
               rec.onsetVariabilityMins != null && rec.onsetVariabilityMins! >= 45) ...[
             Wrap(
               spacing: 8,
               runSpacing: 6,
               children: [
-                if (rec.sleepDebtHours != null && rec.sleepDebtHours! > 0.5)
+                if (rec.sleepDebtMins != null && rec.sleepDebtMins! > 30)
                   _buildInsightChip(
                     icon: Icons.trending_down_rounded,
-                    label: '${rec.sleepDebtHours!.toStringAsFixed(1)}h sleep debt',
-                    color: rec.sleepDebtHours! >= 3.0 ? AppColors.danger : AppColors.warning,
+                    label: '${TimeFormatter.formatDurationMinutes(rec.sleepDebtMins!)} sleep debt',
+                    color: rec.sleepDebtMins! >= 180 ? AppColors.danger : AppColors.warning,
                   ),
                 if (rec.onsetVariabilityMins != null && rec.onsetVariabilityMins! >= 45)
                   _buildInsightChip(
@@ -201,71 +207,31 @@ class TonightTargetCard extends StatelessWidget {
             const SizedBox(height: 12),
           ],
 
-          // 4. Action Strip: Tappable Science Modal Cue + Curtain Preview
-          Row(
-            children: [
-              // Tap for detailed science explanation
-              Expanded(
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(8),
-                  onTap: () => _showDetailedExplanationSheet(context, rec, weeklyHistory),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.auto_awesome_rounded, size: 14, color: AppColors.primary),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            'Based on ${rec.anchorBedtime} anchor • Why this target? →',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.primary,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
+          // 4. Tappable Science Modal Cue
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => _showDetailedExplanationSheet(context, rec, weeklyHistory),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  const Icon(Icons.auto_awesome_rounded, size: 14, color: AppColors.primary),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Based on ${rec.anchorBedtime} anchor • Why this target? →',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
+                ],
               ),
-
-              // Curtain preview button
-              Consumer(
-                builder: (context, ref, _) {
-                  return InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () => ref.read(sleepEnforcementProvider.notifier).previewOverlay(),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.surfaceElevated,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.shield_moon_outlined, size: 12, color: AppColors.textTertiary),
-                          SizedBox(width: 4),
-                          Text(
-                            'Preview Curtain',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -275,9 +241,9 @@ class TonightTargetCard extends StatelessWidget {
   String _getStatusSubtitle(SleepRecommendation rec) {
     switch (rec.adherenceStatus) {
       case 'advancing':
-        return '${rec.shiftMinutes}m earlier step';
+        return '${rec.stepMinutes}m earlier step';
       case 'holding':
-        return 'Holding steady';
+        return rec.holdReason == 'consolidating' ? 'Settling in' : 'Holding steady';
       case 'regressing':
         return 'Anchored · resume soon';
       case 'achieved':
@@ -320,9 +286,16 @@ class TonightTargetCard extends StatelessWidget {
   String _getStatusTitle(SleepRecommendation rec) {
     switch (rec.adherenceStatus) {
       case 'advancing':
-        return 'Advancing: ${rec.shiftMinutes}m earlier tonight';
+        return 'Advancing: ${rec.stepMinutes}m earlier than last night';
       case 'holding':
-        return 'Holding: steady at your anchor';
+        return switch (rec.holdReason) {
+          'consolidating' => 'Holding: letting your body clock catch up',
+          'missed' => 'Holding: repeating last night\'s target',
+          'lead_cap' => 'Holding: already ${rec.shiftMinutes}m ahead of your usual time',
+          'late_wake' => 'Holding: wake on time to unlock the next step',
+          'short_night' => 'Holding: recovering from a short night',
+          _ => 'Holding: same target as last night',
+        };
       case 'regressing':
         return 'Regressing: holding at anchor until on track';
       case 'achieved':
@@ -612,7 +585,7 @@ class TonightTargetCard extends StatelessWidget {
                           'Get into bed at ${rec.recommendedBedtime} (lights-out time). '
                           'Your target sleep onset is ${rec.recommendedSleepOnset}, '
                           'allowing ~15 minutes to fall asleep. '
-                          'This is anchored to your habitual onset of ${rec.anchorBedtime}${rec.shiftMinutes > 0 ? ", shifted ${rec.shiftMinutes} minutes earlier tonight" : ""}.',
+                          'This is anchored to your habitual onset of ${rec.anchorBedtime}${rec.shiftMinutes > 0 ? ", with tonight's target ${rec.shiftMinutes} minutes earlier than that" : ""}.',
                     ),
                     const SizedBox(height: 10),
                     _buildExplanationCard(
@@ -620,9 +593,9 @@ class TonightTargetCard extends StatelessWidget {
                       iconColor: AppColors.warning,
                       title: 'Hard Cutoff: $cutoffDisplay',
                       content:
-                          'Your cutoff ($cutoffDisplay) is the latest point to begin sleep '
-                          'without disrupting your circadian rhythm. Staying awake past this '
-                          'compresses deep slow-wave sleep and raises next-day cortisol.',
+                          'Your cutoff ($cutoffDisplay) is the latest you should get into bed. '
+                          'With a fixed wake time, every minute past it comes out of tonight\'s sleep, '
+                          'and late-evening light pushes your body clock later, making tomorrow\'s target harder.',
                     ),
                     const SizedBox(height: 20),
 
@@ -640,10 +613,10 @@ class TonightTargetCard extends StatelessWidget {
                           _buildStatRow('Anchor bedtime', rec.anchorBedtime),
                           if (rec.habitualWakeTime != null)
                             _buildStatRow('Habitual wake', rec.habitualWakeTime!),
-                          if (rec.sleepNeedHours != null)
-                            _buildStatRow('Sleep need', '${rec.sleepNeedHours}h'),
-                          if (rec.sleepDebtHours != null && rec.sleepDebtHours! > 0)
-                            _buildStatRow('Sleep debt', '${rec.sleepDebtHours!.toStringAsFixed(1)}h'),
+                          if (rec.sleepNeedMins != null)
+                            _buildStatRow('Sleep need', TimeFormatter.formatDurationMinutes(rec.sleepNeedMins!)),
+                          if (rec.sleepDebtMins != null && rec.sleepDebtMins! > 0)
+                            _buildStatRow('Sleep debt', TimeFormatter.formatDurationMinutes(rec.sleepDebtMins!)),
                           if (rec.onsetVariabilityMins != null)
                             _buildStatRow('Onset variability', '±${rec.onsetVariabilityMins} min'),
                           if (rec.socialJetlag != 0)
@@ -668,6 +641,12 @@ class TonightTargetCard extends StatelessWidget {
                       action: 'Begin Wind-Down',
                       description: 'Stop eating, dim bedroom lighting, and switch off high-intensity blue light.',
                     ),
+                    if (rec.magnesiumReminderTime != null)
+                      _buildProtocolStep(
+                        time: TimeFormatter.formatTime(rec.magnesiumReminderTime!),
+                        action: 'Take Magnesium 💊',
+                        description: 'Take your magnesium supplement (~45 min before bed) to promote muscle relaxation and deep sleep.',
+                      ),
                     _buildProtocolStep(
                       time: rec.recommendedBedtime,
                       action: 'In Bed · Lights Out',
@@ -785,6 +764,115 @@ class TonightTargetCard extends StatelessWidget {
               ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMagnesiumReminderBar(BuildContext context, SleepRecommendation rec) {
+    final isTaken = magnesium?.taken == true;
+    final magTime = rec.magnesiumReminderTime != null
+        ? TimeFormatter.formatTime(rec.magnesiumReminderTime!)
+        : null;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      decoration: BoxDecoration(
+        color: isTaken
+            ? AppColors.success.withValues(alpha: 0.12)
+            : AppColors.surfaceElevated,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isTaken
+              ? AppColors.success.withValues(alpha: 0.45)
+              : AppColors.border,
+          width: 1.2,
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isTaken
+                  ? AppColors.success.withValues(alpha: 0.2)
+                  : AppColors.primary.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              isTaken ? Icons.check_circle_rounded : Icons.medication_rounded,
+              size: 16,
+              color: isTaken ? AppColors.success : AppColors.primary,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'Magnesium Vitamin',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: isTaken ? AppColors.success : AppColors.textPrimary,
+                      ),
+                    ),
+                    if (magTime != null && !isTaken) ...[
+                      const SizedBox(width: 6),
+                      Text(
+                        '· $magTime',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isTaken
+                      ? (magnesium?.takenAt != null
+                          ? 'Taken at ${magnesium!.takenAt} ✓ Muscle relax & GABA active'
+                          : 'Logged as taken ✓ Ready for restorative sleep')
+                      : 'Take ~45 min before bed to support deep sleep & calm HR',
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (onToggleMagnesium != null) ...[
+            const SizedBox(width: 8),
+            InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: () => onToggleMagnesium!(!isTaken),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: isTaken ? AppColors.surface : AppColors.primary,
+                  borderRadius: BorderRadius.circular(8),
+                  border: isTaken
+                      ? Border.all(color: AppColors.border)
+                      : null,
+                ),
+                child: Text(
+                  isTaken ? 'Undo' : 'Log Taken',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    color: isTaken ? AppColors.textTertiary : Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
