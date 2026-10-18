@@ -4,6 +4,8 @@ import '../models/dashboard_data.dart';
 import '../services/api_service.dart';
 import '../services/widget_service.dart';
 
+import '../models/sleep_calendar_data.dart';
+
 final apiServiceProvider = Provider<ApiService>((ref) {
   return ApiService();
 });
@@ -16,6 +18,31 @@ class SelectedDateNotifier extends Notifier<String> {
 }
 
 final selectedDateProvider = NotifierProvider<SelectedDateNotifier, String>(SelectedDateNotifier.new);
+
+class SelectedMonthNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, 1);
+  }
+
+  void setMonth(DateTime month) => state = DateTime(month.year, month.month, 1);
+  void previousMonth() => state = DateTime(state.year, state.month - 1, 1);
+  void nextMonth() => state = DateTime(state.year, state.month + 1, 1);
+  void currentMonth() {
+    final now = DateTime.now();
+    state = DateTime(now.year, now.month, 1);
+  }
+}
+
+final selectedMonthProvider = NotifierProvider<SelectedMonthNotifier, DateTime>(SelectedMonthNotifier.new);
+
+final sleepCalendarProvider = FutureProvider.autoDispose<SleepCalendarResponse>((ref) async {
+  final api = ref.watch(apiServiceProvider);
+  final monthDate = ref.watch(selectedMonthProvider);
+  final monthStr = DateFormat('yyyy-MM').format(monthDate);
+  return api.getSleepCalendar(month: monthStr);
+});
 
 final dashboardProvider = FutureProvider.autoDispose<DashboardData>((ref) async {
   final api = ref.watch(apiServiceProvider);

@@ -3,6 +3,7 @@ import '../config/constants.dart';
 import '../models/dashboard_data.dart';
 import '../models/sleep_recommendation.dart';
 import '../models/chat_message.dart';
+import '../models/sleep_calendar_data.dart';
 
 class ApiService {
   late final Dio _dio;
@@ -33,6 +34,20 @@ class ApiService {
   Future<Map<String, dynamic>> getSleepDetail(String date) async {
     final res = await _dio.get('/sleep/$date');
     return res.data['data'] as Map<String, dynamic>;
+  }
+
+  Future<SleepCalendarResponse> getSleepCalendar({String? month, String? startDate, String? endDate}) async {
+    final queryParams = <String, dynamic>{};
+    if (month != null) queryParams['month'] = month;
+    if (startDate != null) queryParams['startDate'] = startDate;
+    if (endDate != null) queryParams['endDate'] = endDate;
+
+    final res = await _dio.get(
+      '/sleep/calendar',
+      queryParameters: queryParams.isNotEmpty ? queryParams : null,
+    );
+    final data = res.data['data'] as Map<String, dynamic>;
+    return SleepCalendarResponse.fromJson(data);
   }
 
   Future<SleepRecommendation> getSleepRecommendation(String date) async {
@@ -83,8 +98,8 @@ class ApiService {
     final payload = <String, dynamic>{
       'date': date,
       'taken': taken,
-      if (dosage != null) 'dosage': dosage,
-      if (notes != null) 'notes': notes,
+      'dosage': ?dosage,
+      'notes': ?notes,
     };
     final res = await _dio.post('/supplements/magnesium', data: payload);
     return res.data as Map<String, dynamic>;

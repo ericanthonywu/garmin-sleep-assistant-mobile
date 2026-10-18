@@ -7,6 +7,8 @@ import 'package:garmin_momcare/models/sleep_recommendation.dart';
 import 'package:garmin_momcare/providers/dashboard_provider.dart';
 import 'package:garmin_momcare/screens/dashboard/widgets/weekly_sleep_chart.dart';
 import 'package:garmin_momcare/screens/dashboard/widgets/tonight_target_card.dart';
+import 'package:garmin_momcare/models/sleep_calendar_data.dart';
+import 'package:garmin_momcare/screens/sleep/widgets/sleep_calendar_grid.dart';
 
 void main() {
   testWidgets('MomCareApp renders correctly with dashboard data', (WidgetTester tester) async {
@@ -224,5 +226,80 @@ void main() {
     await tester.tap(find.text('Undo'));
     await tester.pump();
     expect(loggedState, false);
+  });
+
+  testWidgets('SleepCalendarGrid renders month, sleep score pills, and triggers day selection', (WidgetTester tester) async {
+    String? selectedDay;
+    final calendarResponse = SleepCalendarResponse(
+      startDate: '2026-10-01',
+      endDate: '2026-10-31',
+      days: [
+        SleepCalendarDay(
+          date: '2026-10-17',
+          hasData: true,
+          sleepScore: 67,
+          sleepHours: 5.7,
+          bedtime: '05:16',
+          wakeTime: '11:19',
+          magnesiumTaken: true,
+        ),
+        SleepCalendarDay(
+          date: '2026-10-18',
+          hasData: true,
+          sleepScore: 83,
+          sleepHours: 7.8,
+          bedtime: '03:18',
+          wakeTime: '11:24',
+          magnesiumTaken: true,
+        ),
+      ],
+      monthlyStats: const SleepCalendarStats(
+        totalNightsTracked: 2,
+        averageSleepScore: 75,
+        averageSleepHours: 6.8,
+        optimalNights: 0,
+        goodNights: 1,
+        fairNights: 1,
+        poorNights: 0,
+        magnesiumAdherenceRate: 100,
+      ),
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SleepCalendarGrid(
+              currentMonth: DateTime(2026, 10, 1),
+              selectedDate: '2026-10-18',
+              calendarData: calendarResponse,
+              onSelectDate: (d) => selectedDay = d,
+              onPreviousMonth: () {},
+              onNextMonth: () {},
+              onJumpToToday: () {},
+            ),
+          ),
+        ),
+      ),
+    );
+
+    await tester.pump();
+
+    // Verify month title and stats
+    expect(find.text('October 2026'), findsOneWidget);
+    expect(find.text('MONTHLY SLEEP OVERVIEW'), findsOneWidget);
+    expect(find.text('2 nights tracked'), findsOneWidget);
+    expect(find.text('75'), findsOneWidget); // avg score
+    expect(find.text('6.8h'), findsOneWidget); // avg duration
+    expect(find.text('100%'), findsOneWidget); // mag adherence
+
+    // Verify day scores
+    expect(find.text('83'), findsOneWidget);
+    expect(find.text('67'), findsOneWidget);
+
+    // Tap day 17
+    await tester.tap(find.text('67'));
+    await tester.pump();
+    expect(selectedDay, '2026-10-17');
   });
 }

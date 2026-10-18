@@ -77,6 +77,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         Row(
                           children: [
                             IconButton(
+                              tooltip: 'Sleep Calendar',
+                              onPressed: () => context.go('/sleep'),
+                              icon: const Icon(Icons.calendar_month_rounded, color: AppColors.primary),
+                            ),
+                            IconButton(
                               tooltip: 'Sync HealthKit',
                               onPressed: syncState.isLoading
                                   ? null
