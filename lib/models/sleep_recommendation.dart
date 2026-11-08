@@ -8,7 +8,7 @@ class SleepRecommendation {
   final int stepMinutes; // earlier than last night's target
   final int socialJetlag;
   final String adherenceStatus; // 'advancing', 'holding', 'regressing', 'achieved', 'no_data'
-  final String? holdReason; // 'consolidating', 'missed', 'lead_cap', 'late_wake', 'short_night'
+  final String? holdReason; // 'consolidating', 'missed', 'lead_cap', 'late_wake', 'short_night', 'stale_data'
   final String guidance;
   
   // New fields

@@ -294,6 +294,7 @@ class TonightTargetCard extends StatelessWidget {
           'lead_cap' => 'Holding: already ${rec.shiftMinutes}m ahead of your usual time',
           'late_wake' => 'Holding: wake on time to unlock the next step',
           'short_night' => 'Holding: recovering from a short night',
+          'stale_data' => 'Holding: sync your watch to resume',
           _ => 'Holding: same target as last night',
         };
       case 'regressing':
