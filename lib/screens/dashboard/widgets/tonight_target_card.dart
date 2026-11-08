@@ -219,7 +219,7 @@ class TonightTargetCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Based on ${rec.anchorBedtime} anchor • Why this target? →',
+                      'Sleep onset ${TimeFormatter.formatTime(rec.recommendedSleepOnset)} (usual ${TimeFormatter.formatTime(rec.anchorBedtime)}) • Why? →',
                       style: const TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
@@ -611,7 +611,9 @@ class TonightTargetCard extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          _buildStatRow('Anchor bedtime', rec.anchorBedtime),
+                          _buildStatRow('Usual sleep onset (14d anchor)', TimeFormatter.formatTime(rec.anchorBedtime)),
+                          _buildStatRow('Target sleep onset', TimeFormatter.formatTime(rec.recommendedSleepOnset)),
+                          _buildStatRow('In-bed target (-15m latency)', TimeFormatter.formatTime(rec.recommendedBedtime)),
                           if (rec.habitualWakeTime != null)
                             _buildStatRow('Habitual wake', rec.habitualWakeTime!),
                           if (rec.sleepNeedMins != null)
